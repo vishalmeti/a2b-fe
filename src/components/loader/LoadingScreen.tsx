@@ -169,3 +169,5 @@ export const LoadingScreen = ({ baseMessage = "Loading" }: { baseMessage?: strin
         </div>
     );
 };
+
+export default LoadingScreen;

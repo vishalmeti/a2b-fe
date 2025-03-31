@@ -65,7 +65,7 @@ const NavBar = () => {
       <div className="container flex h-16 items-center">
         <div className="mr-4 flex">
           <Link to="/" className="flex items-center space-x-2">
-            <span className="text-lg font-bold text-brand-green">Borrow<span className="text-brand-green-dark">Anything</span></span>
+            <span className="text-lg font-bold text-brand-green">Shard<span className="text-brand-green-dark">-IT</span></span>
           </Link>
         </div>
 

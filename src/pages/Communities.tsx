@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, ArrowLeft, Check, Plus } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { motion } from 'framer-motion';
 import NavBar from "@/components/NavBar";
+import LoadingScreen from "@/components/loader/LoadingScreen";
 import { Community } from "@/types/community";
 import { CommunityCard } from "@/components/communities/CommunityCard";
 import { CommunityDetails } from "@/components/communities/CommunityDetails";
@@ -96,13 +97,28 @@ const CommunityBrowser = () => {
     const [communities] = useState<Community[]>(placeholderCommunities); // Replace with data fetching
     const [selectedCommunityId, setSelectedCommunityId] = useState<string | null>(null);
     const [joinedCommunityIds, setJoinedCommunityIds] = useState<Set<string>>(new Set(['2']));
+    const [isLoading, setIsLoading] = useState(true);
+    const [isDetailLoading, setIsDetailLoading] = useState(false);
+
+    useEffect(() => {
+        // Initial loading simulation
+        const timer = setTimeout(() => {
+            setIsLoading(false);
+        }, 3000);
+        return () => clearTimeout(timer);
+    }, []);
 
     const selectedCommunity = communities.find(c => c.id === selectedCommunityId);
     const isMember = selectedCommunity ? joinedCommunityIds.has(selectedCommunity.id) : false;
 
     const handleSelectCommunity = (id: string) => {
+        setIsDetailLoading(true);
         setSelectedCommunityId(id);
         window.scrollTo(0, 0);
+        // Simulate loading delay for detail view
+        setTimeout(() => {
+            setIsDetailLoading(false);
+        }, 3000);
     };
 
     const handleGoBack = () => {
@@ -122,6 +138,14 @@ const CommunityBrowser = () => {
             return newSet;
         });
     };
+
+    if (isLoading) {
+        return <LoadingScreen baseMessage="Loading Communities" />;
+    }
+
+    if (isDetailLoading) {
+        return <LoadingScreen baseMessage="Loading Community Details" />;
+    }
 
     return (
         <>

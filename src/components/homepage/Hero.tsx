@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { MapPin, ArrowRight } from "lucide-react";
+import { Blocks, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import hero from "../../../public/Hero2.webp"
 
@@ -14,11 +14,13 @@ export function Hero({ community }: HeroProps) {
         <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center">
           <div className="space-y-6">
             <div className="inline-block rounded-lg bg-gradient-to-r from-brand-green to-brand-green px-3 py-1 text-sm text-white shadow-lg hover:scale-105 transition-transform duration-300">
-              <MapPin className="mr-1 h-5 w-5 inline animate-pulse" />
-              {community}
+              <Blocks className="mr-1 mb-2 h-7 w-7 inline animate-pulse" />
+               <span className="text-lg font-bold mt-5">
+                SHARD - IT 
+                </span>
             </div>
             <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl bg-gradient-to-r from-brand-green to-brand-green/20 bg-clip-text text-transparent">
-              Share More, Spend Less, Connect Better
+              Share More, Spend Less , Connect Better
             </h1>
             <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed animate-fade-in-up">
               Access thousands of items from your neighbors without the burden of ownership. 
