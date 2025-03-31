@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { MapPin, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import hero from "../../../public/Hero.webp"
+import hero from "../../../public/Hero2.webp"
 
 interface HeroProps {
   community: string;

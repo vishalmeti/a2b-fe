@@ -1,11 +1,11 @@
-
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import NavBar from "@/components/NavBar";
+import { ItemImages } from "@/components/items/ItemImages";
+import { itemsData } from "@/components/items/mock-data";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Card,
   CardContent,
@@ -14,15 +14,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+// import {
+//   Dialog,
+//   DialogContent,
+//   DialogDescription,
+//   DialogFooter,
+//   DialogHeader,
+//   DialogTitle,
+//   DialogTrigger,
+// } from "@/components/ui/dialog";
 import {
   Popover,
   PopoverContent,
@@ -36,74 +36,12 @@ import {
   Heart, MessageCircle, ArrowLeft, Clock, Info, User
 } from "lucide-react";
 import { format } from "date-fns";
-
-// Sample data - In a real app, this would come from an API
-const itemsData = [
-  {
-    id: "1",
-    name: "Power Drill",
-    description: "Professional cordless power drill, perfect for small home projects. Includes two batteries and a charger. Great for drilling holes in walls, wood, and other materials. Recently serviced and in excellent condition.",
-    images: [
-      "https://images.unsplash.com/photo-1504148455328-c376907d081c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
-      "https://images.unsplash.com/photo-1540104539488-92a51bbc0410?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
-      "https://images.unsplash.com/photo-1572981779307-38b8cabb2407?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60"
-    ],
-    owner: {
-      id: "user1",
-      name: "Alex Smith",
-      avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-      rating: 4.8,
-      responseRate: "99%",
-      responseTime: "< 1 hour",
-      memberSince: "Jan 2022",
-    },
-    location: {
-      neighborhood: "Brighton Heights",
-      distance: "0.5 miles away",
-      address: "123 Main St, Pittsburgh, PA"
-    },
-    details: {
-      condition: "Excellent",
-      brand: "DeWalt",
-      estimatedValue: "$150",
-      ageOfItem: "2 years",
-      category: "Tools",
-      tags: ["power tools", "DIY", "home improvement"]
-    },
-    borrowingTerms: {
-      returnPeriod: "3-7 days",
-      securityDeposit: "$50",
-      meetupPreference: "Porch pickup",
-      additionalNotes: "Please charge batteries before returning."
-    },
-    availability: "Available now",
-    reviews: [
-      {
-        userId: "user5",
-        userName: "Sarah Johnson",
-        userAvatar: "https://randomuser.me/api/portraits/women/44.jpg",
-        rating: 5,
-        date: "March 15, 2023",
-        comment: "The drill worked perfectly for my project. Alex was very responsive and flexible with pickup and return times."
-      },
-      {
-        userId: "user6",
-        userName: "Mike Peterson",
-        userAvatar: "https://randomuser.me/api/portraits/men/67.jpg",
-        rating: 5,
-        date: "February 2, 2023",
-        comment: "Great tool, well maintained. Appreciated the extra battery!"
-      }
-    ]
-  },
-  // More items would be here in a real app
-];
+import { Calendar } from "@/components/ui/calendar";
 
 const ItemDetail = () => {
   const { id } = useParams();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [message, setMessage] = useState("");
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { toast } = useToast();
   
   // Find the item with the matching id
@@ -130,18 +68,6 @@ const ItemDetail = () => {
       </div>
     );
   }
-  
-  const handleNextImage = () => {
-    setCurrentImageIndex((prevIndex) => 
-      prevIndex === item.images.length - 1 ? 0 : prevIndex + 1
-    );
-  };
-  
-  const handlePrevImage = () => {
-    setCurrentImageIndex((prevIndex) => 
-      prevIndex === 0 ? item.images.length - 1 : prevIndex - 1
-    );
-  };
 
   const handleShare = () => {
     if (navigator.share) {
@@ -201,45 +127,7 @@ const ItemDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Item Images and Details */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Item Images */}
-            <div className="relative overflow-hidden rounded-lg aspect-video bg-muted">
-              <img
-                src={item.images[currentImageIndex]}
-                alt={item.name}
-                className="object-cover w-full h-full"
-              />
-              
-              {item.images.length > 1 && (
-                <>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-background/80 hover:bg-background"
-                    onClick={handlePrevImage}
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-background/80 hover:bg-background"
-                    onClick={handleNextImage}
-                  >
-                    <ArrowLeft className="h-4 w-4 transform rotate-180" />
-                  </Button>
-                </>
-              )}
-              
-              <div className="absolute bottom-2 right-2 flex space-x-1">
-                {item.images.map((_, idx) => (
-                  <div 
-                    key={idx} 
-                    className={`w-2 h-2 rounded-full ${idx === currentImageIndex ? 'bg-white' : 'bg-white/50'}`}
-                    onClick={() => setCurrentImageIndex(idx)}
-                  />
-                ))}
-              </div>
-            </div>
+            <ItemImages images={item.images} name={item.name} />
 
             {/* Item Details */}
             <div className="space-y-4">

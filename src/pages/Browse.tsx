@@ -99,16 +99,16 @@ const items = [
   },
   {
     id: 5,
-    name: "Lawn Mower",
-    description: "Gas-powered lawn mower in excellent condition",
-    image: "https://images.unsplash.com/photo-1580844512879-a916a3c95a2e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
+    name: "Monitor",
+    description: "Gaming monitor in excellent condition",
+    image: "https://images.unsplash.com/photo-1593305841991-05c297ba4575?q=80&w=2957&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     owner: {
       name: "Michael Roberts",
       avatar: "https://randomuser.me/api/portraits/men/42.jpg",
       rating: 4.5,
     },
     distance: "1.8 miles",
-    category: "Gardening",
+    category: "Gaming",
   },
   {
     id: 6,
@@ -127,7 +127,7 @@ const items = [
     id: 7,
     name: "Folding Table",
     description: "6-foot folding table, perfect for parties",
-    image: "https://images.unsplash.com/photo-1565090116783-1ef8e976a1b2?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
+    image: "https://plus.unsplash.com/premium_vector-1722152242334-bb43bb038e36?q=80&w=3560&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     owner: {
       name: "Robert Thomas",
       avatar: "https://randomuser.me/api/portraits/men/22.jpg",
@@ -140,7 +140,7 @@ const items = [
     id: 8,
     name: "Pressure Washer",
     description: "Electric pressure washer, great for cleaning patios and decks",
-    image: "https://images.unsplash.com/photo-1621274218965-5e7d37c9af86?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
+    image: "https://plus.unsplash.com/premium_vector-1722152242334-bb43bb038e36?q=80&w=3560&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     owner: {
       name: "Lisa Garcia",
       avatar: "https://randomuser.me/api/portraits/women/28.jpg",
