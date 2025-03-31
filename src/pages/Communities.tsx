@@ -2,9 +2,9 @@
 "use client"; // Add if using Next.js App Router
 
 import React, { useState } from 'react';
-import { Users, ArrowLeft, Check, Plus } from 'lucide-react';
-
-// --- Shadcn UI Imports (adjust paths as needed) ---
+import { Users, ArrowLeft, Check, Plus, MapPin, Star, Share2, Clock, Shield } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import type { LatLngExpression } from 'leaflet';
 import { Button } from "@/components/ui/button";
 import {
     Card,
@@ -18,7 +18,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { motion } from 'framer-motion';
 
-// --- Placeholder Data & Interface ---
 interface Community {
     id: string;
     name: string;
@@ -35,6 +34,10 @@ interface Community {
     };
     rules?: string[];
     location?: string;
+    coordinates?: {
+        lat: number;
+        lng: number;
+    };
 }
 
 const placeholderCommunities: Community[] = [
@@ -57,7 +60,11 @@ const placeholderCommunities: Community[] = [
             'Respond to requests within 24 hours',
             'Report any damages immediately'
         ],
-        location: 'University District'
+        location: 'University District',
+        coordinates: {
+            lat: 47.6062,
+            lng: -122.3321
+        }
     },
     {
         id: '2',
@@ -78,7 +85,12 @@ const placeholderCommunities: Community[] = [
             'Maximum borrow period: 7 days',
             'Safety first - wear appropriate gear'
         ],
-        location: 'Downtown Metro Area'
+        location: 'Downtown Metro Area',
+        coordinates:{
+            lat: 77.594566,
+            lng: 12.971599
+        }
+        
     },
     {
         id: '3',
@@ -99,25 +111,25 @@ const placeholderCommunities: Community[] = [
             'Document item condition with photos',
             'Return with original packaging'
         ],
-        location: 'Tech Hub District'
+        location: 'Thoraipakkam Chennai',
+        coordinates: {
+            lat: 13.0211,
+            lng: 80.2455
+        }
     }
 ];
-
-// --- Component ---
 
 const CommunityBrowser = () => {
     const [communities] = useState<Community[]>(placeholderCommunities); // Replace with data fetching
     const [selectedCommunityId, setSelectedCommunityId] = useState<string | null>(null);
-    // Simulate user's joined communities - replace with actual user data/state
     const [joinedCommunityIds, setJoinedCommunityIds] = useState<Set<string>>(new Set(['2']));
 
     const selectedCommunity = communities.find(c => c.id === selectedCommunityId);
     const isMember = selectedCommunity ? joinedCommunityIds.has(selectedCommunity.id) : false;
 
-    // --- Handlers ---
     const handleSelectCommunity = (id: string) => {
         setSelectedCommunityId(id);
-        window.scrollTo(0, 0); // Scroll to top when viewing detail
+        window.scrollTo(0, 0);
     };
 
     const handleGoBack = () => {
@@ -125,7 +137,6 @@ const CommunityBrowser = () => {
     };
 
     const handleJoinToggle = (id: string) => {
-        // Replace with actual API call / state management logic
         setJoinedCommunityIds(prev => {
             const newSet = new Set(prev);
             if (newSet.has(id)) {
@@ -139,25 +150,21 @@ const CommunityBrowser = () => {
         });
     };
 
-    // --- Rendering ---
     return (
         <div className="container mx-auto py-8 px-4 md:px-6">
             {selectedCommunity ? (
-                // --- Detail View ---
                 <motion.div
-                    key={selectedCommunity.id} // Add key for animation trigger
+                    key={selectedCommunity.id}
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, ease: "easeInOut" }}
                     className="space-y-6"
                 >
-                    {/* Back Button */}
                     <Button variant="ghost" onClick={handleGoBack} className="mb-4 text-sm text-muted-foreground hover:text-foreground">
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Back to Communities
                     </Button>
 
-                    {/* Community Header */}
                     <div className="flex flex-col sm:flex-row items-start gap-6 p-6 bg-card border rounded-lg">
                         <Avatar className="w-20 h-20 border-2 border-primary/20">
                             <AvatarImage src={selectedCommunity.imageUrl} alt={selectedCommunity.name} />
@@ -167,7 +174,6 @@ const CommunityBrowser = () => {
                             <CardTitle className="text-3xl font-bold tracking-tight mb-2">{selectedCommunity.name}</CardTitle>
                             <div className="flex items-center text-muted-foreground text-sm mb-3">
                                 <Users className="mr-2 h-4 w-4" />
-                                {/* Format number for readability */}
                                 {selectedCommunity.memberCount.toLocaleString()} members
                             </div>
                             {selectedCommunity.tags && selectedCommunity.tags.length > 0 && (
@@ -177,7 +183,6 @@ const CommunityBrowser = () => {
                                     ))}
                                 </div>
                             )}
-                            {/* Join/Leave Button */}
                             <Button
                                 variant={isMember ? 'outline' : 'default'}
                                 size="lg"
@@ -193,7 +198,6 @@ const CommunityBrowser = () => {
                         </div>
                     </div>
 
-                    {/* Community Description */}
                     <Card>
                         <CardHeader>
                             <CardTitle className="text-xl">About this community</CardTitle>
@@ -203,7 +207,6 @@ const CommunityBrowser = () => {
                         </CardContent>
                     </Card>
 
-                    {/* Community Statistics */}
                     <Card className="mt-4">
                         <CardHeader>
                             <CardTitle className="text-xl">Community Statistics</CardTitle>
@@ -211,46 +214,86 @@ const CommunityBrowser = () => {
                         <CardContent>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <div className="flex flex-col items-center p-4 bg-secondary/20 rounded-lg">
+                                    <Share2 className="h-6 w-6 text-primary mb-2" />
                                     <span className="text-2xl font-bold text-primary">{selectedCommunity.stats.activeBorrows}</span>
-                                    <span className="text-sm text-muted-foreground">Active Borrows</span>
+                                    <span className="text-sm text-muted-foreground text-center">Active Borrows</span>
                                 </div>
                                 <div className="flex flex-col items-center p-4 bg-secondary/20 rounded-lg">
+                                    <Users className="h-6 w-6 text-primary mb-2" />
                                     <span className="text-2xl font-bold text-primary">{selectedCommunity.stats.totalItemsShared}</span>
-                                    <span className="text-sm text-muted-foreground">Items Shared</span>
+                                    <span className="text-sm text-muted-foreground text-center">Items Shared</span>
                                 </div>
                                 <div className="flex flex-col items-center p-4 bg-secondary/20 rounded-lg">
+                                    <Clock className="h-6 w-6 text-primary mb-2" />
                                     <span className="text-2xl font-bold text-primary">{selectedCommunity.stats.successfulTransactions}</span>
-                                    <span className="text-sm text-muted-foreground">Successful Borrows</span>
+                                    <span className="text-sm text-muted-foreground text-center">Completed Borrows</span>
                                 </div>
                                 <div className="flex flex-col items-center p-4 bg-secondary/20 rounded-lg">
+                                    <Star className="h-6 w-6 text-primary mb-2" />
                                     <span className="text-2xl font-bold text-primary">{selectedCommunity.stats.averageRating}★</span>
-                                    <span className="text-sm text-muted-foreground">Avg. Rating</span>
+                                    <span className="text-sm text-muted-foreground text-center">Avg. Rating</span>
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
-                    {/* Community Rules */}
+                    {selectedCommunity.location && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-xl flex items-center gap-2">
+                                    <MapPin className="h-5 w-5" />
+                                    Location
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <p className="text-muted-foreground">{selectedCommunity.location}</p>
+                                {selectedCommunity.coordinates && (
+                                    <div className="h-[300px] w-full rounded-lg overflow-hidden border">
+                                        <MapContainer 
+                                            center={[selectedCommunity.coordinates.lat, selectedCommunity.coordinates.lng] as LatLngExpression}
+                                            zoom={14}
+                                            style={{ height: '100%', width: '100%' }}
+                                        >
+                                            <TileLayer
+                                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                            />
+                                            <Marker position={[selectedCommunity.coordinates.lat, selectedCommunity.coordinates.lng]}>
+                                                <Popup>
+                                                    {selectedCommunity.name}
+                                                </Popup>
+                                            </Marker>
+                                        </MapContainer>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    )}
+
                     {selectedCommunity.rules && (
                         <Card>
                             <CardHeader>
-                                <CardTitle className="text-xl">Community Rules</CardTitle>
+                                <CardTitle className="text-xl flex items-center gap-2">
+                                    <Shield className="h-5 w-5" />
+                                    Community Rules
+                                </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <ul className="list-disc list-inside space-y-2">
+                                <ul className="space-y-3">
                                     {selectedCommunity.rules.map((rule, index) => (
-                                        <li key={index} className="text-muted-foreground">{rule}</li>
+                                        <li key={index} className="flex items-start gap-3">
+                                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary text-sm">
+                                                {index + 1}
+                                            </span>
+                                            <span className="text-muted-foreground flex-1">{rule}</span>
+                                        </li>
                                     ))}
                                 </ul>
                             </CardContent>
                         </Card>
                     )}
-
-                    {/* Add more sections like Rules, Recent Posts, etc. here */}
-
                 </motion.div>
             ) : (
-                // --- List View ---
                 <div className="space-y-6">
                     <h1 className="text-3xl font-bold tracking-tight text-foreground">Discover Communities</h1>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
@@ -259,7 +302,7 @@ const CommunityBrowser = () => {
                                 key={community.id}
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.3, delay: communities.indexOf(community) * 0.05 }} // Stagger animation
+                                transition={{ duration: 0.3, delay: communities.indexOf(community) * 0.05 }}
                             >
                                 <Card
                                     className="h-full flex flex-col cursor-pointer hover:border-primary/50 hover:shadow-md transition-all duration-200 ease-in-out"
@@ -291,7 +334,6 @@ const CommunityBrowser = () => {
                                             <Users className="h-3 w-3" />
                                             {community.memberCount.toLocaleString()} Members
                                         </span>
-                                        {/* Optional: Show Joined status on card */}
                                         {joinedCommunityIds.has(community.id) && (
                                             <Badge variant="outline" className="text-primary border-primary/50">Joined</Badge>
                                         )}
