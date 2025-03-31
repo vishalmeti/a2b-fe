@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
@@ -11,8 +10,10 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Hero } from "@/components/homepage/Hero";
+import { FeaturedItems } from "@/components/homepage/FeaturedItems";
+import { Benefits } from "@/components/homepage/Benefits";
 
-// Sample data
 const featuredItems = [
   {
     id: 1,
@@ -69,56 +70,14 @@ const featuredItems = [
 ];
 
 const Index = () => {
-  const isMobile = useIsMobile();
-  const [community, setCommunity] = useState("Brighton Heights, Pittsburgh");
+  const [community, setCommunity] = useState("Bengaluru / Bangalore, India");
 
   return (
     <div className="flex min-h-screen flex-col">
       <NavBar />
       
       <main className="flex-1">
-        {/* Hero Section */}
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-brand-green-light/10">
-          <div className="container px-4 md:px-6">
-            <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center">
-              <div className="space-y-4">
-                <div className="inline-block rounded-lg bg-brand-green px-3 py-1 text-sm text-white">
-                  <MapPin className="mr-1 h-3 w-3 inline" />
-                  {community}
-                </div>
-                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-                  Borrow from neighbors, save money, reduce waste
-                </h1>
-                <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  Why buy something you'll only use once? Borrow it from your community instead. 
-                  It's more affordable, sustainable, and connects you with neighbors.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Link to="/browse">
-                    <Button size="lg" className="w-full sm:w-auto">
-                      Browse Items <ArrowRight className="ml-1.5 h-5 w-5" />
-                    </Button>
-                  </Link>
-                  <Link to="/signup">
-                    <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                      List Your First Item
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-              <div className="mx-auto max-w-[420px] lg:max-w-none lg:ml-auto">
-                <div className="aspect-video overflow-hidden rounded-xl">
-                  <img
-                    src="https://images.unsplash.com/photo-1556155092-490a1ba16284?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
-                    alt="People sharing items in a community"
-                    className="object-cover w-full h-full"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
+        <Hero community={community} />
         {/* How It Works */}
         <section className="w-full py-12 md:py-24">
           <div className="container px-4 md:px-6">
@@ -127,7 +86,7 @@ const Index = () => {
                 <div className="inline-block rounded-lg bg-brand-neutral-light px-3 py-1 text-sm">
                   Simple Process
                 </div>
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-brand-green">
                   How It Works
                 </h2>
                 <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
@@ -167,127 +126,8 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Featured Items */}
-        <section className="w-full py-12 md:py-24 bg-brand-neutral-lightest">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="space-y-2">
-                <div className="inline-block rounded-lg bg-brand-neutral-light px-3 py-1 text-sm">
-                  Available Now
-                </div>
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-                  Featured Items Near You
-                </h2>
-                <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  Check out what your neighbors are sharing in {community}
-                </p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
-              {featuredItems.map((item) => (
-                <Link to={`/items/${item.id}`} key={item.id}>
-                  <Card className="h-full overflow-hidden transition-shadow hover:shadow-md">
-                    <div className="aspect-video w-full overflow-hidden">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="h-full w-full object-cover transition-transform hover:scale-105"
-                      />
-                    </div>
-                    <CardHeader className="p-4">
-                      <div className="flex items-center justify-between">
-                        <Badge variant="outline" className="bg-brand-neutral-lightest">
-                          {item.category}
-                        </Badge>
-                        <div className="flex items-center text-sm text-muted-foreground">
-                          <MapPin className="mr-1 h-3 w-3" />
-                          {item.distance}
-                        </div>
-                      </div>
-                      <CardTitle className="text-lg">{item.name}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-4 pt-0">
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {item.description}
-                      </p>
-                    </CardContent>
-                    <CardFooter className="p-4 pt-0">
-                      <div className="flex items-center space-x-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={item.owner.avatar} alt={item.owner.name} />
-                          <AvatarFallback>{item.owner.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div className="text-sm">
-                          <p className="font-medium">{item.owner.name}</p>
-                          <div className="flex items-center">
-                            <span className="text-yellow-500">★</span>
-                            <span className="ml-1">{item.owner.rating}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </CardFooter>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-            <div className="flex justify-center mt-8">
-              <Link to="/browse">
-                <Button variant="outline" size="lg">
-                  View All Items
-                  <ArrowRight className="ml-1.5 h-5 w-5" />
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        {/* Benefits */}
-        <section className="w-full py-12 md:py-24">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="space-y-2">
-                <div className="inline-block rounded-lg bg-brand-neutral-light px-3 py-1 text-sm">
-                  Why Borrow?
-                </div>
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-                  Benefits of Borrowing
-                </h2>
-                <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  Borrowing is better for your wallet, your space, and the planet.
-                </p>
-              </div>
-            </div>
-            <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-3 lg:gap-12 mt-8">
-              <div className="flex flex-col items-center space-y-2 rounded-lg p-4 text-center">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-green/10">
-                  <HandCoins className="h-6 w-6 text-brand-green" />
-                </div>
-                <h3 className="text-xl font-bold">Save Money</h3>
-                <p className="text-muted-foreground">
-                  Why buy expensive items you'll only use occasionally?
-                </p>
-              </div>
-              <div className="flex flex-col items-center space-y-2 rounded-lg p-4 text-center">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-green/10">
-                  <Leaf className="h-6 w-6 text-brand-green" />
-                </div>
-                <h3 className="text-xl font-bold">Reduce Waste</h3>
-                <p className="text-muted-foreground">
-                  Help the environment by reducing consumption and waste
-                </p>
-              </div>
-              <div className="flex flex-col items-center space-y-2 rounded-lg p-4 text-center">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-green/10">
-                  <Users className="h-6 w-6 text-brand-green" />
-                </div>
-                <h3 className="text-xl font-bold">Build Community</h3>
-                <p className="text-muted-foreground">
-                  Connect with neighbors and build a stronger community
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
+        <FeaturedItems items={featuredItems} community={community} />
+        <Benefits />
 
         {/* CTA */}
         <section className="w-full py-12 md:py-24 bg-brand-green text-white">
@@ -318,46 +158,80 @@ const Index = () => {
         </section>
       </main>
 
-      <footer className="w-full py-6 bg-muted">
+      <footer className="w-full py-12 bg-muted border-t">
         <div className="container px-4 md:px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          {/* Newsletter Section */}
+          <div className="mb-12 grid gap-8 md:grid-cols-2 items-center">
             <div>
-              <h3 className="text-lg font-semibold mb-2">Borrow Anything</h3>
-              <ul className="space-y-1 text-sm">
-                <li><Link to="/about" className="hover:underline">About Us</Link></li>
-                <li><Link to="/how-it-works" className="hover:underline">How It Works</Link></li>
-                <li><Link to="/trust-safety" className="hover:underline">Trust & Safety</Link></li>
+              <h3 className="text-2xl font-bold mb-2">Stay Connected</h3>
+              <p className="text-muted-foreground">Join our newsletter for community updates and exclusive offers.</p>
+            </div>
+            <div className="flex gap-2">
+              <input 
+                type="email" 
+                placeholder="Enter your email" 
+                className="flex-1 px-4 py-2 rounded-lg border bg-background"
+              />
+              <Button variant="default">Subscribe</Button>
+            </div>
+          </div>
+
+          {/* Main Footer Content */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 pb-8 border-b">
+            <div className="col-span-2 lg:col-span-2">
+              <h3 className="text-xl font-bold mb-4">Borrow Bundle</h3>
+              <p className="text-muted-foreground mb-4 max-w-sm">
+                Connecting communities through sustainable sharing. Borrow what you need, share what you have.
+              </p>
+              <div className="flex gap-4">
+                <a href="#" className="hover:text-brand-green"><svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/></svg></a>
+                <a href="#" className="hover:text-brand-green"><svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84"/></svg></a>
+                <a href="#" className="hover:text-brand-green"><svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z"/></svg></a>
+              </div>
+            </div>
+
+            {/* Quick Links */}
+            <div>
+              <h3 className="text-lg font-semibold mb-3">Discover</h3>
+              <ul className="space-y-2 text-sm">
+                <li><Link to="/about" className="text-muted-foreground hover:text-brand-green">About Us</Link></li>
+                <li><Link to="/how-it-works" className="text-muted-foreground hover:text-brand-green">How It Works</Link></li>
+                <li><Link to="/trust-safety" className="text-muted-foreground hover:text-brand-green">Trust & Safety</Link></li>
+                <li><Link to="/pricing" className="text-muted-foreground hover:text-brand-green">Pricing</Link></li>
               </ul>
             </div>
+
             <div>
-              <h3 className="text-lg font-semibold mb-2">Community</h3>
-              <ul className="space-y-1 text-sm">
-                <li><Link to="/communities" className="hover:underline">Find Communities</Link></li>
-                <li><Link to="/guidelines" className="hover:underline">Community Guidelines</Link></li>
-                <li><Link to="/stories" className="hover:underline">Success Stories</Link></li>
+              <h3 className="text-lg font-semibold mb-3">Community</h3>
+              <ul className="space-y-2 text-sm">
+                <li><Link to="/communities" className="text-muted-foreground hover:text-brand-green">Find Communities</Link></li>
+                <li><Link to="/guidelines" className="text-muted-foreground hover:text-brand-green">Guidelines</Link></li>
+                <li><Link to="/blog" className="text-muted-foreground hover:text-brand-green">Blog</Link></li>
+                <li><Link to="/stories" className="text-muted-foreground hover:text-brand-green">Stories</Link></li>
               </ul>
             </div>
+
             <div>
-              <h3 className="text-lg font-semibold mb-2">Support</h3>
-              <ul className="space-y-1 text-sm">
-                <li><Link to="/help" className="hover:underline">Help Center</Link></li>
-                <li><Link to="/contact" className="hover:underline">Contact Us</Link></li>
-                <li><Link to="/faq" className="hover:underline">FAQ</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Legal</h3>
-              <ul className="space-y-1 text-sm">
-                <li><Link to="/terms" className="hover:underline">Terms of Service</Link></li>
-                <li><Link to="/privacy" className="hover:underline">Privacy Policy</Link></li>
-                <li><Link to="/cookies" className="hover:underline">Cookie Policy</Link></li>
+              <h3 className="text-lg font-semibold mb-3">Support</h3>
+              <ul className="space-y-2 text-sm">
+                <li><Link to="/help" className="text-muted-foreground hover:text-brand-green">Help Center</Link></li>
+                <li><Link to="/contact" className="text-muted-foreground hover:text-brand-green">Contact</Link></li>
+                <li><Link to="/faq" className="text-muted-foreground hover:text-brand-green">FAQ</Link></li>
+                <li><Link to="/report" className="text-muted-foreground hover:text-brand-green">Report Issue</Link></li>
               </ul>
             </div>
           </div>
-          <div className="mt-8 pt-6 border-t">
-            <p className="text-sm text-muted-foreground text-center">
-              © {new Date().getFullYear()} Borrow Anything. All rights reserved.
+
+          {/* Bottom Bar */}
+          <div className="mt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-sm text-muted-foreground">
+              © {new Date().getFullYear()} Borrow Bundle. All rights reserved.
             </p>
+            <div className="flex gap-4 text-sm text-muted-foreground">
+              <Link to="/terms" className="hover:text-brand-green">Terms</Link>
+              <Link to="/privacy" className="hover:text-brand-green">Privacy</Link>
+              <Link to="/cookies" className="hover:text-brand-green">Cookies</Link>
+            </div>
           </div>
         </div>
       </footer>
