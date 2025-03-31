@@ -1,5 +1,6 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { apiService } from "@/services/apiService";
+import { ItemRepository } from "@/repositories/Item";
 import { Link } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import { Button } from "@/components/ui/button";
@@ -26,23 +27,13 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 
-// Sample data
-const categories = [
-  "All Categories",
-  "Tools",
-  "Kitchen",
-  "Outdoors",
-  "Electronics",
-  "Party & Events",
-  "Sports",
-  "Gardening",
-  "Cleaning",
-  "Books",
-  "Kids & Toys",
-  "Vehicles",
-  "Other"
-];
+interface Category {
+  id: number;
+  name: string;
+  icon: string | null;
+}
 
 const items = [
   {
@@ -152,10 +143,41 @@ const items = [
 ];
 
 const Browse = () => {
+  useAuthRedirect();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [distance, setDistance] = useState([5]);
   const [viewMode, setViewMode] = useState("grid");
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [categoryError, setCategoryError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      setIsLoadingCategories(true);
+      setCategoryError(null);
+      const response = await apiService.get(ItemRepository.GET_CATEGORIES); // Update with your actual API endpoint
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error('Failed to fetch categories');
+      }
+      const data = response.data;
+      console.log("Categories response:", data);
+      setCategories([
+        { id: 0, name: "All Categories", icon: null },
+        ...data
+      ]);
+      console.log("Categories fetched successfully:", data);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      setCategoryError(error instanceof Error ? error.message : 'Failed to load categories');
+    } finally {
+      setIsLoadingCategories(false);
+    }
+  };
 
   // Filter items based on search query, category, and distance
   const filteredItems = items.filter((item) => {
@@ -294,16 +316,23 @@ const Browse = () => {
               <Select 
                 value={selectedCategory}
                 onValueChange={setSelectedCategory}
+                disabled={isLoadingCategories}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Category" />
+                  <SelectValue placeholder={isLoadingCategories ? "Loading..." : "Category"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
+                  {categoryError ? (
+                    <SelectItem value="error" disabled>
+                      Error loading categories
                     </SelectItem>
-                  ))}
+                  ) : (
+                    categories.map((category) => (
+                      <SelectItem key={category.id} value={category.name}>
+                        {category.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
               <div className="flex flex-col space-y-2">
