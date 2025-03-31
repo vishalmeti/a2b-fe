@@ -89,7 +89,7 @@ const Auth = () => {
         description: `Welcome, ${first_name} ${last_name}!`,
       });
       
-      navigate("/");
+      navigate("/communities");
     } catch (error: any) {
       toast({
         variant: "destructive",
