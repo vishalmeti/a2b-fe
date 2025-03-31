@@ -8,7 +8,7 @@ export const useAuthRedirect = () => {
     const checkToken = () => {
       const token = localStorage.getItem('token');
       if (!token) {
-        navigate('/');
+        navigate('/login');
       }
     };
 
@@ -18,7 +18,7 @@ export const useAuthRedirect = () => {
     // Set up storage event listener
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'token' && !e.newValue) {
-        navigate('/');
+        navigate('/login');
       }
     };
 

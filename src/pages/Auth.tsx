@@ -45,6 +45,7 @@ const Auth = () => {
         dispatch(fetchNotifications());
       }
       toast({
+        variant: "success",
         title: "Login successful",
         description: "Welcome back to Borrow Anything!",
       });
