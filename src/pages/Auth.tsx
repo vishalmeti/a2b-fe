@@ -1,4 +1,4 @@
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import NavBar from "@/components/NavBar";
+import { apiService } from "@/services/apiService";
+import {UserRepository} from "@/repositories/User";
+
+interface LoginResponse {
+
+  username: string;
+  password: string;
+  
+}
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -33,7 +42,7 @@ const Auth = () => {
   const [activeTab, setActiveTab] = useState(defaultTab);
   
   // Form state for login
-  const [loginEmail, setLoginEmail] = useState("");
+  const [loginUsername, setLoginUsername] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   
@@ -51,11 +60,11 @@ const Auth = () => {
   };
   
   // Handle login form submission
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate form
-    if (!loginEmail || !loginPassword) {
+    if (!loginUsername || !loginPassword) {
       toast({
         variant: "destructive",
         title: "Error",
@@ -63,17 +72,30 @@ const Auth = () => {
       });
       return;
     }
-    
-    // In a real app, this would call an API to authenticate the user
-    toast({
-      title: "Login successful",
-      description: "Welcome back to Borrow Anything!",
-    });
-    
-    // Redirect to home page after login
-    setTimeout(() => {
+
+    try {
+      const response = await apiService.post<LoginResponse>(UserRepository.LOGIN, {
+        "username": loginUsername,
+        "password": loginPassword
+      });
+
+      // Store the token
+      localStorage.setItem('token', response.data.access);
+      
+      toast({
+        title: "Login successful",
+        description: "Welcome back to Borrow Anything!",
+      });
+      
+      // Redirect to home page after login
       navigate("/");
-    }, 1000);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: error.response?.data?.message || "An error occurred during login",
+      });
+    }
   };
   
   // Handle signup form submission
@@ -147,10 +169,9 @@ const Auth = () => {
                       <Label htmlFor="login-email">Email</Label>
                       <Input
                         id="login-email"
-                        type="email"
-                        placeholder="example@email.com"
-                        value={loginEmail}
-                        onChange={(e) => setLoginEmail(e.target.value)}
+                        placeholder="User name"
+                        value={loginUsername}
+                        onChange={(e) => setLoginUsername(e.target.value)}
                         required
                       />
                     </div>

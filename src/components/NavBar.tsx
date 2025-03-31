@@ -1,24 +1,30 @@
-
-import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AvatarPopover } from "@/components/modals/AvatarPopover";
 import { 
   Menu, Search, PlusCircle, Bell, User as UserIcon, 
   LogIn, Home, Package, Map, Settings
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { NotificationsPopover } from "@/components/modals/NotificationsPopover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const NavBar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const [isAuthenticated, setIsAuthenticated] = useState(false); // This would come from auth context
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const navItems = [
     { name: "Home", path: "/", icon: <Home className="mr-2 h-4 w-4" /> },
@@ -35,6 +41,24 @@ const NavBar = () => {
   const isActive = (path: string) => {
     return location.pathname === path;
   };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setIsAuthenticated(false);
+    navigate("/");
+  };
+
+  useEffect(() => {
+    // Simulate authentication check
+    const checkAuth = () => {
+      // Replace with actual authentication logic
+      const token = localStorage.getItem("token");
+      setIsAuthenticated(!!token);
+    };
+
+    checkAuth();
+  }
+  , [location.pathname]);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -84,20 +108,9 @@ const NavBar = () => {
                 </Button>
               </Link>
               
-              <Link to="/notifications">
-                <Button variant="ghost" size="sm" className="h-9 w-9 px-0 relative">
-                  <Bell className="h-4 w-4" />
-                  <Badge className="absolute top-0 right-0 h-4 w-4 p-0 flex items-center justify-center text-[10px]">3</Badge>
-                  <span className="sr-only">Notifications</span>
-                </Button>
-              </Link>
+              <NotificationsPopover />
               
-              <Link to="/profile">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="https://github.com/shadcn.png" alt="User" />
-                  <AvatarFallback>U</AvatarFallback>
-                </Avatar>
-              </Link>
+              <AvatarPopover onLogout={handleLogout} />
             </>
           ) : (
             <Link to="/login">
