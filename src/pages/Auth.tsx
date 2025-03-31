@@ -12,12 +12,14 @@ import type { AppDispatch } from '@/store/store';
 import { fetchNotifications } from '@/store/slices/notificationSlice';
 import { LoginForm } from "@/components/auth/LoginForm";
 import { SignupForm } from "@/components/auth/SignupForm";
+import { LoadingScreen } from "@/components/loader/LoadingScreen";
 
 const Auth = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
   
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -35,6 +37,7 @@ const Auth = () => {
   };
 
   const handleLogin = async (username: string, password: string) => {
+    setIsLoading(true);
     try {
       const response = await apiService.post(UserRepository.LOGIN, { username, password });
       if (response.data.access) {
@@ -52,20 +55,54 @@ const Auth = () => {
         title: "Login failed",
         description: error.response?.data?.message || "An error occurred during login",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleSignup = ({ username, email, password, first_name, last_name }: { username: string; email: string; password: string; first_name: string; last_name: string }) => {
-    // Implement signup logic
-    toast({
-      title: "Account created",
-      description: `Welcome, ${first_name} ${last_name}!`,
-    });
-    setTimeout(() => navigate("/"), 1000);
+  const handleSignup = async ({ username, email, password, first_name, last_name }: { username: string; email: string; password: string; first_name: string; last_name: string }) => {
+    setIsLoading(true);
+    try {
+      // Register the user
+      await apiService.post(UserRepository.REGISTER, {
+        username,
+        email,
+        password,
+        first_name,
+        last_name
+      });
+
+      // After successful registration, log in the user
+      const loginResponse = await apiService.post(UserRepository.LOGIN, {
+        username,
+        password
+      });
+
+      if (loginResponse.data.access) {
+        localStorage.setItem('token', loginResponse.data.access);
+        dispatch(fetchNotifications());
+      }
+
+      toast({
+        title: "Account created",
+        description: `Welcome, ${first_name} ${last_name}!`,
+      });
+      
+      navigate("/");
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Registration failed",
+        description: error.response?.data?.message || "An error occurred during registration",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="flex min-h-screen flex-col">
+      {isLoading && <LoadingScreen baseMessage={activeTab === 'login' ? 'Logging in ..' : 'Creating your account ..'} />}
       <NavBar />
       <main className="flex-1 flex items-center justify-center py-12">
         <div className="container max-w-md px-4 md:px-6">

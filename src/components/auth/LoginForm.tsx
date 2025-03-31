@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CardHeader, CardContent, CardFooter, CardDescription, CardTitle } from "@/components/ui/card";
+import { Eye, EyeOff } from "lucide-react";
 
 interface LoginFormProps {
   onSubmit: (username: string, password: string) => Promise<void>;
@@ -14,6 +15,7 @@ interface LoginFormProps {
 export const LoginForm = ({ onSubmit, onSwitchTab }: LoginFormProps) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -29,7 +31,7 @@ export const LoginForm = ({ onSubmit, onSwitchTab }: LoginFormProps) => {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="login-email">Email</Label>
+          <Label htmlFor="login-email">User name</Label>
           <Input
             id="login-email"
             placeholder="Username"
@@ -41,27 +43,31 @@ export const LoginForm = ({ onSubmit, onSwitchTab }: LoginFormProps) => {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="login-password">Password</Label>
-            <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+            {/* <Link to="/forgot-password" className="text-sm text-primary hover:underline">
               Forgot password?
-            </Link>
+            </Link> */}
           </div>
-          <Input
-            id="login-password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="remember-me"
-            checked={rememberMe}
-            onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-          />
-          <label htmlFor="remember-me" className="text-sm font-medium">
-            Remember me
-          </label>
+          <div className="relative">
+            <Input
+              id="login-password"
+              placeholder="Password"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2"
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4 text-gray-500" />
+              ) : (
+                <Eye className="h-4 w-4 text-gray-500" />
+              )}
+            </button>
+          </div>
         </div>
         <Button type="submit" className="w-full">Sign In</Button>
       </CardContent>
