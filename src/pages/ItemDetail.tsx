@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import { ItemImages } from "@/components/items/ItemImages";
@@ -38,6 +38,14 @@ const ItemDetail = () => {
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true)
   const { toast } = useToast();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, []);
   
   // Find the item with the matching id
   const item = itemsData.find(item => item.id === id);
