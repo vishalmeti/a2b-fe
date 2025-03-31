@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
-// Import Loader2 for the spinner
+import { useNavigate } from 'react-router-dom';
 import { Loader2, Computer, Camera, Book, Gamepad2, Headphones, Handshake } from 'lucide-react';
-// Import motion and AnimatePresence from framer-motion
 import { motion, AnimatePresence, Variants } from 'framer-motion';
+import { Button } from "@/components/ui/button"; // Adjust path if needed
 
 // --- Configuration ---
 const items = [Computer, Camera, Handshake, Book, Headphones, Gamepad2];
 const iconCycleInterval = 1800; // ms per icon
 const ellipsisIntervalDuration = 400; // ms per dot change
+const cancelButtonDelay = 8000; // 5000ms = 5 seconds
+const longerDelayMessageDelay = 3000; // 8000ms = 8 seconds
 
-// --- Animation Variants ---
-
-// Enhanced Icon Variants (Unchanged from V3)
+// --- Animation Variants --- (Unchanged)
 const iconVariants: Variants = {
     initial: { opacity: 0, scale: 0.3, rotate: -90, y: 30 },
     animate: {
@@ -34,8 +34,6 @@ const iconVariants: Variants = {
         transition: { duration: 0.4, ease: 'anticipate' },
     },
 };
-
-// Text Variants (Unchanged from V3)
 const textVariants: Variants = {
     hidden: { opacity: 0, y: 10 },
     visible: {
@@ -46,12 +44,37 @@ const textVariants: Variants = {
 };
 
 // --- Main Component ---
-
 export const LoadingScreen = ({ baseMessage = "Loading" }: { baseMessage?: string }) => {
     const [currentIcon, setCurrentIcon] = useState(0);
-    const [ellipsisCount, setEllipsisCount] = useState(1); // For animating "..."
+    const [ellipsisCount, setEllipsisCount] = useState(1);
+    // --- State to control button visibility ---
+    const [showCancelButton, setShowCancelButton] = useState(false);
+    const [showLongerMessage, setShowLongerMessage] = useState(false);
+    const navigate = useNavigate();
 
-    // Effect for cycling through icons (Unchanged)
+    // --- Effect to show button after delay ---
+    useEffect(() => {
+        // Set a timer to show the button after the specified delay
+        const timer = setTimeout(() => {
+            setShowCancelButton(true);
+        }, cancelButtonDelay);
+
+        // Cleanup function: Clear the timer if the component unmounts
+        // before the timer finishes (e.g., loading completes quickly)
+        return () => clearTimeout(timer);
+
+    }, []); // Empty dependency array ensures this runs only once on mount
+
+    // Add effect for longer message
+    useEffect(() => {
+        const longerMessageTimer = setTimeout(() => {
+            setShowLongerMessage(true);
+        }, longerDelayMessageDelay); // Show after 8 seconds
+
+        return () => clearTimeout(longerMessageTimer);
+    }, []);
+
+    // Effects for icon cycle and ellipsis (Unchanged)
     useEffect(() => {
         const iconInterval = setInterval(() => {
             setCurrentIcon((prev) => (prev + 1) % items.length);
@@ -59,60 +82,90 @@ export const LoadingScreen = ({ baseMessage = "Loading" }: { baseMessage?: strin
         return () => clearInterval(iconInterval);
     }, []);
 
-    // Effect for animating the ellipsis (Unchanged)
     useEffect(() => {
         const ellipsisInt = setInterval(() => {
-            setEllipsisCount((count) => (count % 3) + 1); // Cycles 1, 2, 3
+            setEllipsisCount((count) => (count % 3) + 1);
         }, ellipsisIntervalDuration);
         return () => clearInterval(ellipsisInt);
     }, []);
 
     const Icon = items[currentIcon];
-    const animatedEllipsis = '.'.repeat(ellipsisCount); // String of dots: ".", "..", "..."
-    // Padding to prevent layout shift (Unchanged)
-    const ellipsisPadding = '\u00A0'.repeat(3 - ellipsisCount); // Non-breaking spaces
+    const animatedEllipsis = '.'.repeat(ellipsisCount);
+    const ellipsisPadding = '\u00A0'.repeat(3 - ellipsisCount);
+
+    const handleCancelAndGoHome = () => {
+        navigate('/');
+    };
 
     return (
-        // Main container: Reduced vertical gap to gap-4
-        <div className="fixed inset-0 bg-background/90 backdrop-blur-md flex items-center justify-center flex-col gap-4 z-50">
+        <div className="fixed inset-0 bg-background/90 backdrop-blur-md flex items-center justify-center flex-col gap-5 z-50">
 
-            {/* Icon and Spinner Container: Resized to w-20 h-20 */}
+            {/* Icon and Spinner Container */}
             <div className="relative flex items-center justify-center w-40 h-40">
-
-                {/* Spinner (Loader2) positioned behind the icon */}
+                {/* Spinner (Loader2) */}
                 <Loader2
-                    className="absolute w-full h-full animate-spin text-primary/30 z-[5]" // Adjusted color/opacity, z-index below icon
+                    className="absolute w-full h-full animate-spin text-primary/30 z-[5]"
                 />
-
-                {/* Animated Icon (in front) */}
+                {/* Animated Icon */}
                 <AnimatePresence mode="wait">
                     <motion.div
-                        key={currentIcon} // Key change triggers animation
+                        key={currentIcon}
                         variants={iconVariants}
                         initial="initial"
                         animate="animate"
                         exit="exit"
-                        className="z-10" // Icon is topmost (z-index: 10)
+                        className="z-10"
                     >
-                        {/* Icon size remains w-12 h-12 */}
                         <Icon className="w-20 h-20 text-primary" />
                     </motion.div>
                 </AnimatePresence>
             </div>
 
-            {/* Animated Loading Text (Unchanged from V3) */}
+            {/* Animated Loading Text */}
             <motion.p
                 className="text-xl font-semibold text-foreground tracking-wide min-h-[2em]"
                 variants={textVariants}
                 initial="hidden"
                 animate="visible"
-                key={baseMessage} // Re-animate if baseMessage prop changes
+                key={baseMessage}
             >
                 {baseMessage}
-                {/* Render animated dots and padding */}
                 <span>{animatedEllipsis}</span>
-                <span className="opacity-0">{ellipsisPadding}</span> {/* Invisible Padding */}
+                <span className="opacity-0">{ellipsisPadding}</span>
             </motion.p>
+
+            {/* Taking longer message */}
+            <AnimatePresence>
+                {showLongerMessage && (
+                    <motion.p
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        className="text-sm text-muted-foreground italic"
+                    >
+                        This is taking longer than usual, please wait...
+                    </motion.p>
+                )}
+            </AnimatePresence>
+
+            {/* --- Conditionally Rendered Cancel Button --- */}
+            {/* Render only if showCancelButton is true */}
+            {showCancelButton && (
+                <motion.div
+                    className="animate-fade-in" // Use fade-in animation when it appears
+                    // Removed inline animationDelay, appearance is controlled by mounting now
+                >
+                    <Button
+                        variant="outline" // Outline variant is subtle and fits most themes well
+                        onClick={handleCancelAndGoHome}
+                        className="border-primary/30 hover:bg-primary/10 hover:text-primary" // Add subtle theme hover colors
+                        aria-label="Return to homepage" // Accessibility
+                    >
+                        Return to Homepage
+                    </Button>
+                </motion.div>
+            )}
+
         </div>
     );
 };

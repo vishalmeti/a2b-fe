@@ -14,15 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-// import {
-//   Dialog,
-//   DialogContent,
-//   DialogDescription,
-//   DialogFooter,
-//   DialogHeader,
-//   DialogTitle,
-//   DialogTrigger,
-// } from "@/components/ui/dialog";
+import { LoadingScreen } from "@/components/loader/LoadingScreen";
 import {
   Popover,
   PopoverContent,
@@ -36,12 +28,15 @@ import {
   Heart, MessageCircle, ArrowLeft, Clock, Info, User
 } from "lucide-react";
 import { format } from "date-fns";
+import { TriangleAlert } from "lucide-react"; // Using a different icon
+
 import { Calendar } from "@/components/ui/calendar";
 
 const ItemDetail = () => {
   const { id } = useParams();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(true)
   const { toast } = useToast();
   
   // Find the item with the matching id
@@ -51,20 +46,49 @@ const ItemDetail = () => {
     return (
       <div className="flex min-h-screen flex-col">
         <NavBar />
-        <main className="flex-1 container py-12">
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <h1 className="text-3xl font-bold mb-4">Item Not Found</h1>
-            <p className="text-muted-foreground mb-6">
-              The item you're looking for doesn't exist or has been removed.
-            </p>
-            <Link to="/browse">
-              <Button>
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Browse
-              </Button>
-            </Link>
-          </div>
-        </main>
+        <div className="flex justify-center items-center flex-1">
+        <div
+                className="
+                    w-full max-w-lg bg-card text-card-foreground
+                    p-8 md:p-12 rounded-xl border shadow-md text-center
+                    transition-shadow duration-300 ease-in-out hover:shadow-xl
+                    animate-fade-in
+                "
+            >
+                <div className="mb-6 flex justify-center">
+                    <TriangleAlert className="w-20 h-20 text-primary  animate-pulse" strokeWidth={2.5} />
+                </div>
+
+                <div
+                    className=""
+                    style={{ animationDelay: '150ms' }}
+                >
+                    <h1 className="text-7xl lg:text-8xl font-extrabold text-primary mb-3 tracking-tight">
+                        404
+                    </h1>
+                    <p className="text-xl lg:text-2xl text-muted-foreground mb-4">
+                        Item Not Found
+                    </p>
+                    {/* Updated paragraph for path display */}
+                    <p className="text-sm text-muted-foreground/80 mb-8">
+                        Sorry, we couldn't find the page:{" "} {/* Added space for readability */}
+                        {/* Apply break-words to the code element */}
+                        {/* <code className="bg-muted px-1 py-0.5 rounded text-muted-foreground font-mono break-words">
+                            {attemptedPath}
+                        </code> */}
+                    </p>
+                </div>
+
+                <div
+                    className=""
+                    style={{ animationDelay: '300ms' }}
+                >
+                    <Button asChild size="lg">
+                        <Link to="/browse">Back to All Items</Link>
+                    </Button>
+                </div>
+            </div>
+        </div>
       </div>
     );
   }
@@ -115,8 +139,9 @@ const ItemDetail = () => {
   return (
     <div className="flex min-h-screen flex-col">
       <NavBar />
-      
+
       <main className="flex-1 container py-8">
+      {isLoading && <LoadingScreen baseMessage={'Fetching details ...'} />}
         <div className="mb-6">
           <Link to="/browse" className="text-muted-foreground hover:text-foreground inline-flex items-center">
             <ArrowLeft className="mr-2 h-4 w-4" />
