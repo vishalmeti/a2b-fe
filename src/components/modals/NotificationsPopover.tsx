@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { Bell, Check } from "lucide-react";
+import { useDispatch, useSelector } from 'react-redux';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -9,60 +10,31 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { apiService } from "@/services/apiService";
-import { UserRepository } from "@/repositories/User";
-import map from "lodash/map";
-
-type Notification = {
-  id: number;
-  text: string;
-  read: boolean;
-  time: string;
-};
+import { fetchNotifications, markAsRead, markAllAsRead } from '@/store/slices/notificationSlice';
+import type { AppDispatch, RootState } from '@/store/store';
 
 export const NotificationsPopover = () => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const dispatch = useDispatch<AppDispatch>();
   const [open, setOpen] = useState(false);
+
+  const { items: notifications, loading: isLoading, error } = useSelector(
+    (state: RootState) => state.notifications
+  );
+
+  const unreadCount = notifications.filter((n: any) => !n.read).length;
 
   useEffect(() => {
     if (open) {
-      const fetchNotifications = async () => {
-        setIsLoading(true);
-        try {
-          const response = await apiService.get(UserRepository.GET_NOTIFICATIONS);
-          console.log("response", response);
-          if (response.status === 200) {
-            const morphedData = map(response.data, (item: any) => ({
-              id: item.id,
-              text: item.message,
-              read: item.is_read,
-              time: item.created_at,
-            }));
-            console.log("morphed data", morphedData);
-            setNotifications(morphedData);
-            setUnreadCount(morphedData.filter((item: any) => !item.read).length);
-          }
-        } catch (err) {
-          setError('Failed to fetch notifications');
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      fetchNotifications();
+      dispatch(fetchNotifications());
     }
-  }, [open]);
+  }, [open, dispatch]);
 
-  const markAsRead = (id: number) => {
-    setNotifications(notifications.map(n => 
-      n.id === id ? { ...n, read: true } : n
-    ));
+  const handleMarkAsRead = (id: number) => {
+    dispatch(markAsRead(id));
   };
 
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
+  const handleMarkAllAsRead = () => {
+    dispatch(markAllAsRead());
   };
 
   return (
@@ -86,14 +58,18 @@ export const NotificationsPopover = () => {
               variant="ghost" 
               size="sm" 
               className="text-xs text-muted-foreground"
-              onClick={markAllAsRead}
+              onClick={handleMarkAllAsRead}
             >
               Mark all as read
             </Button>
           )}
         </div>
         <ScrollArea className="h-[300px]">
-          {notifications.length === 0 ? (
+          {isLoading ? (
+            <div className="p-4 text-center">Loading...</div>
+          ) : error ? (
+            <div className="p-4 text-center text-red-500">{error}</div>
+          ) : notifications.length === 0 ? (
             <div className="p-4 text-center text-sm text-muted-foreground">
               No notifications
             </div>
@@ -117,7 +93,7 @@ export const NotificationsPopover = () => {
                       variant="ghost"
                       size="sm"
                       className="h-8 w-8 p-0"
-                      onClick={() => markAsRead(notification.id)}
+                      onClick={() => handleMarkAsRead(notification.id)}
                     >
                       <Check className="h-4 w-4" />
                       <span className="sr-only">Mark as read</span>

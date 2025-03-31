@@ -24,6 +24,10 @@ import { useToast } from "@/hooks/use-toast";
 import NavBar from "@/components/NavBar";
 import { apiService } from "@/services/apiService";
 import {UserRepository} from "@/repositories/User";
+import { useDispatch } from 'react-redux';
+import type { AppDispatch } from '@/store/store';
+import { fetchNotifications } from '@/store/slices/notificationSlice';
+
 
 interface LoginResponse {
 
@@ -33,6 +37,8 @@ interface LoginResponse {
 }
 
 const Auth = () => {
+  const dispatch = useDispatch<AppDispatch>();
+
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -80,7 +86,11 @@ const Auth = () => {
       });
 
       // Store the token
-      localStorage.setItem('token', response.data.access);
+      if (response.data.access) {
+        localStorage.setItem('token', response.data.access);
+        dispatch(fetchNotifications());
+        
+      }
       
       toast({
         title: "Login successful",
