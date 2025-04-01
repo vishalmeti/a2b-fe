@@ -7,6 +7,11 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { LogIn, User as UserIcon } from "lucide-react";
+import { useDispatch, useSelector } from 'react-redux';
+import type { AppDispatch, RootState } from '@/store/store';
+import { fetchUser } from '@/store/slices/userSlice';
+
+import { useEffect } from "react";
 
 interface AvatarPopoverProps {
   onLogout: () => void;
@@ -14,12 +19,22 @@ interface AvatarPopoverProps {
 
 export const AvatarPopover = ({ onLogout }: AvatarPopoverProps) => {
   const navigate = useNavigate();
-
+  const dispatch = useDispatch<AppDispatch>();
+  const { data, loading, error } = useSelector((state: RootState) => state.user);
+  
+  useEffect(() => {
+    if(!data?.profile_picture_url) {
+      dispatch(fetchUser());
+    }
+  }, [data?.profile_picture_url, dispatch]);
+  
+  
+  
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Avatar className="h-8 w-8 cursor-pointer">
-          <AvatarImage src="https://github.com/shadcn.png" alt="User" />
+          <AvatarImage src={data?.profile_picture_url} alt="User" />
           <AvatarFallback>U</AvatarFallback>
         </Avatar>
       </PopoverTrigger>

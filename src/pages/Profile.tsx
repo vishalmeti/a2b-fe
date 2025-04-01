@@ -19,6 +19,7 @@ import {
   MapPin, UserCircle, Edit2, Check, X, LogOut, Clock
 } from "lucide-react";
 import {ImageUploadModal} from "@/components/modals/ImageUploadModal";
+import LoadingScreen from "@/components/loader/LoadingScreen";
 
 import type { AppDispatch, RootState } from '@/store/store';
 import { useDispatch, useSelector } from 'react-redux';
@@ -128,6 +129,7 @@ const Profile = () => {
   const dispatch = useDispatch<AppDispatch>();
   const {toast} = useToast();
   const { data, loading, error } = useSelector((state: RootState) => state.user);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   useEffect(() => {
     console.log("Redux user data:", data);
@@ -191,6 +193,8 @@ const Profile = () => {
     <div className="flex min-h-screen flex-col">
       <NavBar />
       
+      {isUploadingImage && <LoadingScreen baseMessage="Uploading profile picture" />}
+      
       <main className="flex-1">
         {/* Profile Header */}
         <div className="relative">
@@ -207,23 +211,36 @@ const Profile = () => {
                 maxImages={1}
                 onImagesSelected={async (files) => {
                   if (files.length > 0) {
-                    const imageUrl = URL.createObjectURL(files[0]);
-                    setUserData((prev) => ({
-                      ...prev,
-                      avatar: imageUrl,
-                    }));
-                    const formData = new FormData();
-                    formData.append('image', files[0]);
-                    await apiService.post("/users/profile-image/", formData, {
-                      headers: {
-                        "Content-Type": "multipart/form-data"
-                      }
-                    });
-                    toast({
-                      variant: "success",
-                      title: "Profile picture updated",
-                      description: "Your profile picture has been successfully updated.",
-                    });
+                    try {
+                      setIsUploadingImage(true);
+                      // const imageUrl = URL.createObjectURL(files[0]);
+                      
+                      const formData = new FormData();
+                      formData.append('image', files[0]);
+                      const resp = await apiService.post("/users/profile-image/", formData, {
+                        headers: {
+                          "Content-Type": "multipart/form-data"
+                        }
+                      });
+                      setUserData((prev) => ({
+                        ...prev,
+                        avatar: get(resp, "data.presigned_url", prev.avatar),
+                      }));
+                      toast({
+                        variant: "success",
+                        title: "Profile picture updated",
+                        description: "Your profile picture has been successfully updated.",
+                      });
+                    } catch (error) {
+                      console.error("Error uploading profile image:", error);
+                      toast({
+                        variant: "destructive",
+                        title: "Upload failed",
+                        description: "There was a problem uploading your profile picture.",
+                      });
+                    } finally {
+                      setIsUploadingImage(false);
+                    }
                   }
                 }}
                 title="Update Profile Picture"
