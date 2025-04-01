@@ -10,6 +10,7 @@ import { UserRepository } from "@/repositories/User";
 import { useDispatch } from 'react-redux';
 import type { AppDispatch } from '@/store/store';
 import { fetchNotifications } from '@/store/slices/notificationSlice';
+import { fetchUser } from '@/store/slices/userSlice';
 import { LoginForm } from "@/components/auth/LoginForm";
 import { SignupForm } from "@/components/auth/SignupForm";
 import { LoadingScreen } from "@/components/loader/LoadingScreen";
@@ -43,6 +44,7 @@ const Auth = () => {
       if (response.data.access) {
         localStorage.setItem('token', response.data.access);
         dispatch(fetchNotifications());
+        dispatch(fetchUser());
       }
       toast({
         variant: "success",
@@ -82,6 +84,7 @@ const Auth = () => {
       if (loginResponse.data.access) {
         localStorage.setItem('token', loginResponse.data.access);
         dispatch(fetchNotifications());
+        dispatch(fetchUser());
       }
 
       toast({
