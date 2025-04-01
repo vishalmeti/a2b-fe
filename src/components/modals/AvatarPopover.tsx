@@ -33,8 +33,8 @@ export const AvatarPopover = ({ onLogout }: AvatarPopoverProps) => {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Avatar className="h-8 w-8 cursor-pointer">
-          <AvatarImage src={data?.profile_picture_url} alt="User" />
+        <Avatar className="h-10 w-10 cursor-pointer">
+          <AvatarImage src={data?.profile_picture_url} alt="User" className="object-cover" />
           <AvatarFallback>U</AvatarFallback>
         </Avatar>
       </PopoverTrigger>

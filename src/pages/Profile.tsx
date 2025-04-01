@@ -23,7 +23,7 @@ import LoadingScreen from "@/components/loader/LoadingScreen";
 
 import type { AppDispatch, RootState } from '@/store/store';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchUser } from '@/store/slices/userSlice';
+import { fetchUser, updateUserData } from '@/store/slices/userSlice';
 import get from 'lodash/get';
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { apiService } from "@/services/apiService";
@@ -213,7 +213,6 @@ const Profile = () => {
                   if (files.length > 0) {
                     try {
                       setIsUploadingImage(true);
-                      // const imageUrl = URL.createObjectURL(files[0]);
                       
                       const formData = new FormData();
                       formData.append('image', files[0]);
@@ -222,10 +221,21 @@ const Profile = () => {
                           "Content-Type": "multipart/form-data"
                         }
                       });
+                      
+                      const profileImageUrl = get(resp, "data.presigned_url", userData.avatar);
+                      
+                      // Update local state
                       setUserData((prev) => ({
                         ...prev,
-                        avatar: get(resp, "data.presigned_url", prev.avatar),
+                        avatar: profileImageUrl,
                       }));
+                      
+                      // Update Redux store with the new profile image
+                      dispatch(updateUserData({
+                        ...data,
+                        profile_picture_url: profileImageUrl
+                      }));
+                      
                       toast({
                         variant: "success",
                         title: "Profile picture updated",
@@ -249,7 +259,7 @@ const Profile = () => {
                   <Avatar 
                     className="h-32 w-32 border-4 border-background cursor-pointer relative group"
                   >
-                    <AvatarImage src={userData.avatar} alt={userData.name} />
+                    <AvatarImage src={userData.avatar} alt={userData.name} className="object-cover" />
                     <AvatarFallback>{userData.name.charAt(0)}</AvatarFallback>
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
                       <Camera className="h-6 w-6 text-white" />
