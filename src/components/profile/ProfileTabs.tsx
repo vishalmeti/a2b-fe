@@ -32,15 +32,15 @@ export const ProfileTabs: React.FC<ProfileTabsProps> = ({
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="items">
-        <ItemsTabContent items={userData.itemsListed} />
+      <TabsContent value="items" className="h-[500px] overflow-y-auto">
+        <ItemsTabContent />
       </TabsContent>
 
-      <TabsContent value="history">
+      <TabsContent value="history" className="h-[500px] overflow-y-auto">
         <HistoryTabContent history={userData.borrowingHistory} formatDate={formatDate} />
       </TabsContent>
 
-      <TabsContent value="reviews">
+      <TabsContent value="reviews" className="h-[500px] overflow-y-auto">
         <ReviewsTabContent reviews={userData.reviews} formatDate={formatDate} />
       </TabsContent>
     </Tabs>

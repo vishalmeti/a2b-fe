@@ -3,8 +3,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ImageUploadModal } from "@/components/modals/ImageUploadModal";
-import { Camera, MapPin, Clock, Star, Package, ThumbsUp, Pencil, Check, X } from "lucide-react";
+import { Camera, MapPin, Clock, Star, Package, ThumbsUp, Pencil, Check, X, PlusCircle } from "lucide-react";
 import { ChangeEvent } from "react";
+import { Link } from "react-router-dom";
+
 
 interface ProfileHeaderProps {
   userData: any;
@@ -152,9 +154,16 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 </Button>
               </>
             ) : (
+              <>
+              <div className="flex justify-end mb-4">
+                <Link to="/new-listing">
+                  <Button size="sm"><PlusCircle className="h-4 w-4 mr-1.5" />Add New Item</Button>
+                </Link>
+              </div>
               <Button size="sm" variant="outline" onClick={() => setEditMode(true)} className="bg-white dark:bg-gray-700 dark:text-white">
                 <Pencil className="h-4 w-4 mr-1.5" /> Edit Profile
               </Button>
+          </>
             )}
           </div>
         </div>
