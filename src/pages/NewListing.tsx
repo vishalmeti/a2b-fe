@@ -42,8 +42,9 @@ type FormErrors = Partial<Record<keyof FormData | 'images', string>>;
 
 // --- Stepper Configuration ---
 const steps = [
-    { id: 0, title: "Item Details", description: "Core info & photos.", icon: FileImage },
-    { id: 1, title: "Borrowing Terms", description: "Fees, deposit & pickup.", icon: Settings2 }
+    { id: 0, title: "Item Details", description: "Core info description.", icon: FileImage },
+    { id: 1, title: "Borrowing Terms", description: "Fees, deposit & pickup.", icon: Settings2 },
+    { id: 2, title: "Add Photos", description: "Upload item images.", icon: Camera }
 ];
 
 // --- Helper: Vertical Stepper ---
@@ -143,13 +144,14 @@ const NewListingUltraModern = () => {
             if (!currentData.description.trim()) errors.description = "Description is required.";
             else if (currentData.description.trim().length < 10) errors.description = "Description should be at least 10 characters.";
             if (!currentData.condition) errors.condition = "Please select the item's condition.";
-            if (images.length === 0) errors.images = "Please upload at least one image.";
         } else if (step === 1) {
             if (!currentData.pickup_details.trim()) errors.pickup_details = "Pickup/Dropoff details are required.";
             const fee = parseFloat(currentData.borrowing_fee || "0");
             const deposit = parseFloat(currentData.deposit_amount || "0");
             if (isNaN(fee) || fee < 0) errors.borrowing_fee = "Invalid fee amount (must be 0 or positive).";
             if (isNaN(deposit) || deposit < 0) errors.deposit_amount = "Invalid deposit amount (must be 0 or positive).";
+        } else if (step === 2) {
+            if (images.length === 0) errors.images = "Please upload at least one image.";
         }
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
@@ -174,9 +176,12 @@ const NewListingUltraModern = () => {
         e.preventDefault();
         const step1Valid = validateStep(0);
         const step2Valid = validateStep(1);
-        if (!step1Valid || !step2Valid) {
+        const step3Valid = validateStep(2);
+        if (!step1Valid || !step2Valid || !step3Valid) {
              toast({ variant: "destructive", title: "Validation Error", description: "Please fix all highlighted fields before submitting." });
-             if(!step1Valid) setActiveStep(0); else if (!step2Valid) setActiveStep(1);
+             if(!step1Valid) setActiveStep(0); 
+             else if (!step2Valid) setActiveStep(1);
+             else if (!step3Valid) setActiveStep(2);
             return;
         }
 
@@ -291,35 +296,6 @@ const NewListingUltraModern = () => {
                                                         {formErrors.description && <p className="text-xs text-destructive flex items-center pt-1"><AlertCircle className="h-3 w-3 mr-1"/>{formErrors.description}</p>}
                                                     </div>
                                                 </section>
-
-                                                {/* Images Section */}
-                                                <section className="space-y-4 pt-4">
-                                                    <h3 className="text-sm font-medium text-muted-foreground border-b pb-2 mb-4">Photos {requiredLabel}</h3>
-                                                    <div className={cn("border rounded-lg p-4 bg-muted/20", formErrors.images ? "border-destructive ring-1 ring-destructive" : "border-border")}>
-                                                        {/* Image Grid */}
-                                                        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-4 mb-4">
-                                                            {images.map((image, index) => (
-                                                                <div key={`${image}-${index}`} className="relative aspect-square rounded-md overflow-hidden group border shadow-sm bg-muted">
-                                                                    <img src={image} alt={`Upload preview ${index + 1}`} className="w-full h-full object-cover"/>
-                                                                    <Button variant="destructive" size="icon" className="absolute top-1.5 right-1.5 h-7 w-7 opacity-0 group-hover:opacity-90 focus-visible:opacity-90 transition-opacity z-10 rounded-full" onClick={() => handleRemoveImage(index)} aria-label="Remove image">
-                                                                        <X className="h-4 w-4" />
-                                                                    </Button>
-                                                                </div>
-                                                            ))}
-                                                            {/* Upload Placeholder */}
-                                                            {images.length < 5 && (
-                                                                <label htmlFor="image-upload-input" className={cn( "relative aspect-square w-full rounded-md border-2 border-dashed border-muted-foreground/40 flex flex-col items-center justify-center", "text-center text-muted-foreground cursor-pointer bg-background hover:bg-accent hover:border-primary hover:text-accent-foreground", "transition-all duration-200 ease-in-out group", "focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:border-solid focus-within:border-primary" )} aria-label={`Add photo ${images.length + 1} of 5`} >
-                                                                    <ImagePlus className="h-10 w-10 mb-1 text-muted-foreground/60 transition-transform duration-200 group-hover:scale-110 group-hover:text-primary" />
-                                                                    <span className="text-[0.7rem] font-medium px-1 leading-tight mt-1">Click or Drop</span>
-                                                                    <span className="text-[0.65rem] opacity-80">({images.length}/5)</span>
-                                                                    <input id="image-upload-input" type="file" accept="image/jpeg, image/png, image/webp" multiple className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={handleImageUpload} />
-                                                                </label>
-                                                            )}
-                                                        </div>
-                                                        {formErrors.images && (<p className="text-xs text-destructive flex items-center -mt-2 mb-2"><AlertCircle className="h-3 w-3 mr-1"/>{formErrors.images}</p>)}
-                                                        <div className="flex items-start"> <Info className="h-4 w-4 mr-2 mt-0.5 text-muted-foreground flex-shrink-0" /> <p className="text-xs text-muted-foreground">Upload 1-5 clear photos (JPG, PNG, WEBP). Drag & drop should work too!</p> </div>
-                                                    </div>
-                                                </section>
                                             </CardContent>
                                             <CardFooter className="flex justify-end border-t pt-6 bg-muted/20">
                                                 <Button type="submit" size="lg"> Next: Borrowing Terms <ArrowRight className="ml-2 h-4 w-4" /> </Button>
@@ -329,7 +305,7 @@ const NewListingUltraModern = () => {
 
                                     {/* --- Step 2: Borrowing Terms --- */}
                                     {activeStep === 1 && (
-                                        <form onSubmit={handleSubmit}>
+                                        <form onSubmit={e => { e.preventDefault(); goToNextStep(); }}>
                                             <CardHeader>
                                                 <CardTitle className="flex items-center gap-2"><Settings2 className="h-5 w-5 text-primary"/> Step 2: Borrowing Terms</CardTitle>
                                                 <CardDescription>Specify lending conditions. Required fields marked {requiredLabel}.</CardDescription>
@@ -383,6 +359,65 @@ const NewListingUltraModern = () => {
                                                          </div>
                                                      </div>
                                                  </div>
+                                            </CardContent>
+                                            <CardFooter className="flex justify-between border-t pt-6 bg-muted/20">
+                                                <Button type="button" variant="outline" onClick={goToPrevStep}> <ArrowLeft className="mr-2 h-4 w-4" /> Back </Button>
+                                                <Button type="submit" size="lg"> Next: Add Photos <ArrowRight className="ml-2 h-4 w-4" /> </Button>
+                                            </CardFooter>
+                                        </form>
+                                    )}
+
+                                    {/* --- Step 3: Add Photos --- */}
+                                    {activeStep === 2 && (
+                                        <form onSubmit={handleSubmit}>
+                                            <CardHeader>
+                                                <CardTitle className="flex items-center gap-2"><Camera className="h-5 w-5 text-primary"/> Step 3: Add Photos</CardTitle>
+                                                <CardDescription>Upload photos of your item. Required fields marked {requiredLabel}.</CardDescription>
+                                            </CardHeader>
+                                            <CardContent className="space-y-8 pt-2 pb-8">
+                                                {/* Images Section */}
+                                                <section className="space-y-4">
+                                                    <h3 className="text-sm font-medium text-muted-foreground border-b pb-2 mb-4">Photos {requiredLabel}</h3>
+                                                    <div className={cn("border rounded-lg p-4 bg-muted/20", formErrors.images ? "border-destructive ring-1 ring-destructive" : "border-border")}>
+                                                        {/* Image Grid */}
+                                                        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-4 mb-4">
+                                                            {images.map((image, index) => (
+                                                                <div key={`${image}-${index}`} className="relative aspect-square rounded-md overflow-hidden group border shadow-sm bg-muted">
+                                                                    <img src={image} alt={`Upload preview ${index + 1}`} className="w-full h-full object-cover"/>
+                                                                    <Button variant="destructive" size="icon" className="absolute top-1.5 right-1.5 h-7 w-7 opacity-0 group-hover:opacity-90 focus-visible:opacity-90 transition-opacity z-10 rounded-full" onClick={() => handleRemoveImage(index)} aria-label="Remove image">
+                                                                        <X className="h-4 w-4" />
+                                                                    </Button>
+                                                                </div>
+                                                            ))}
+                                                            {/* Upload Placeholder */}
+                                                            {images.length < 5 && (
+                                                                <label htmlFor="image-upload-input" className={cn( "relative aspect-square w-full rounded-md border-2 border-dashed border-muted-foreground/40 flex flex-col items-center justify-center", "text-center text-muted-foreground cursor-pointer bg-background hover:bg-accent hover:border-primary hover:text-accent-foreground", "transition-all duration-200 ease-in-out group", "focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:border-solid focus-within:border-primary" )} aria-label={`Add photo ${images.length + 1} of 5`} >
+                                                                    <ImagePlus className="h-10 w-10 mb-1 text-muted-foreground/60 transition-transform duration-200 group-hover:scale-110 group-hover:text-primary" />
+                                                                    <span className="text-[0.7rem] font-medium px-1 leading-tight mt-1">Click or Drop</span>
+                                                                    <span className="text-[0.65rem] opacity-80">({images.length}/5)</span>
+                                                                    <input id="image-upload-input" type="file" accept="image/jpeg, image/png, image/webp" multiple className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={handleImageUpload} />
+                                                                </label>
+                                                            )}
+                                                        </div>
+                                                        {formErrors.images && (<p className="text-xs text-destructive flex items-center -mt-2 mb-2"><AlertCircle className="h-3 w-3 mr-1"/>{formErrors.images}</p>)}
+                                                        <div className="flex items-start"> <Info className="h-4 w-4 mr-2 mt-0.5 text-muted-foreground flex-shrink-0" /> <p className="text-xs text-muted-foreground">Upload 1-5 clear photos (JPG, PNG, WEBP). Drag & drop should work too!</p> </div>
+                                                    </div>
+                                                    
+                                                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 p-4 rounded-lg !mt-8">
+                                                        <div className="flex items-start">
+                                                            <Info className="h-5 w-5 mr-3 mt-0.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                                                            <div>
+                                                                <h4 className="font-semibold mb-1 text-sm text-blue-800 dark:text-blue-300">Photo Tips</h4>
+                                                                <ul className="text-xs text-blue-700 dark:text-blue-400/90 space-y-1 list-disc pl-4">
+                                                                    <li>Ensure good lighting to show item details clearly</li>
+                                                                    <li>Include multiple angles of the item</li>
+                                                                    <li>Show any existing damage or wear</li>
+                                                                    <li>Include accessories or components that come with the item</li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </section>
                                             </CardContent>
                                             <CardFooter className="flex justify-between border-t pt-6 bg-muted/20">
                                                 <Button type="button" variant="outline" onClick={goToPrevStep}> <ArrowLeft className="mr-2 h-4 w-4" /> Back </Button>
