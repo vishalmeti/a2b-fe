@@ -27,6 +27,7 @@ import { apiService } from "@/services/apiService";
 import { ItemRepository } from "@/repositories/Item";
 import forEach from "lodash/forEach"; // Importing forEach from lodash
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
+import LoadingScreen from "@/components/loader/LoadingScreen"; // Import the LoadingScreen component
 
 // --- Data Mappings & Constants ---
 // Replace with actual data fetching/logic
@@ -110,8 +111,8 @@ const NewListingUltraModern = () => {
         availability_notes: "",      // <-- Initialized field
     });
     const [formErrors, setFormErrors] = useState<FormErrors>({});
-    // const categoryMap: { [key: string]: number } = { "Tools": 1, "Kitchen": 2, "Outdoors": 3, "Electronics": 4, "Party & Events": 5, "Sports": 6, "Gardening": 7, "Cleaning": 8, "Books": 9, "Kids & Toys": 10, "Vehicles": 11, "Other": 99 };
-    const [categoryMap, setcategoryMap] = useState({})
+    const [categoryMap, setcategoryMap] = useState({});
+    const [isUploading, setIsUploading] = useState(false); // Add state for tracking upload status
     const categoryList = Object.keys(categoryMap);
     const conditionList = [ { value: "NEW", label: "New" }, { value: "LIKE_NEW", label: "Like New" }, { value: "GOOD", label: "Good" }, { value: "FAIR", label: "Fair" }, { value: "POOR", label: "Poor" } ];
 
@@ -215,9 +216,6 @@ const NewListingUltraModern = () => {
     };
 
     // --- Final Submission ---
-    // NOTE: The submit handler itself isn't changed per the request,
-    // but the new `formData` fields (`max_borrow_duration_days`, `availability_notes`)
-    // are available within this function if needed for the payload.
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const step1Valid = validateStep(0);
@@ -231,49 +229,65 @@ const NewListingUltraModern = () => {
             return;
         }
 
-        const categoryId = categoryMap[formData.category];
-        if (!categoryId) { toast({ variant: "destructive", title: "Error", description: "Invalid category selected." }); return; }
-        const depositAmountFormatted = parseFloat(formData.deposit_amount || "0").toFixed(2);
-        const borrowingFeeFormatted = parseFloat(formData.borrowing_fee || "0").toFixed(2);
+        setIsUploading(true); // Start loading indicator
 
-        // Parse new field for max duration if provided
-        const maxDuration = formData.max_borrow_duration_days ? parseInt(formData.max_borrow_duration_days, 10) : null;
+        try {
+            const categoryId = categoryMap[formData.category];
+            if (!categoryId) { 
+                toast({ variant: "destructive", title: "Error", description: "Invalid category selected." }); 
+                setIsUploading(false);
+                return; 
+            }
+            const depositAmountFormatted = parseFloat(formData.deposit_amount || "0").toFixed(2);
+            const borrowingFeeFormatted = parseFloat(formData.borrowing_fee || "0").toFixed(2);
 
-        // Create a new FormData instance
-        const formDataToSubmit = new FormData();
-        formDataToSubmit.append("title", formData.title);
-        formDataToSubmit.append("description", formData.description);
-        formDataToSubmit.append("category", categoryId.toString());
-        formDataToSubmit.append("condition", formData.condition);
-        formDataToSubmit.append("deposit_amount", depositAmountFormatted);
-        formDataToSubmit.append("borrowing_fee", borrowingFeeFormatted);
-        formDataToSubmit.append("pickup_details", formData.pickup_details);
-        // Append new fields if available
-        if (maxDuration !== null) {
-            formDataToSubmit.append("max_borrow_duration_days", maxDuration.toString());
-        }
-        formDataToSubmit.append("availability_notes", formData.availability_notes);
+            // Parse new field for max duration if provided
+            const maxDuration = formData.max_borrow_duration_days ? parseInt(formData.max_borrow_duration_days, 10) : null;
 
-        // Append each image file with key "images"
-        imageFiles.forEach(file => {
-            formDataToSubmit.append("images", file);
-        });
+            // Create a new FormData instance
+            const formDataToSubmit = new FormData();
+            formDataToSubmit.append("title", formData.title);
+            formDataToSubmit.append("description", formData.description);
+            formDataToSubmit.append("category", categoryId.toString());
+            formDataToSubmit.append("condition", formData.condition);
+            formDataToSubmit.append("deposit_amount", depositAmountFormatted);
+            formDataToSubmit.append("borrowing_fee", borrowingFeeFormatted);
+            formDataToSubmit.append("pickup_details", formData.pickup_details);
+            // Append new fields if available
+            if (maxDuration !== null) {
+                formDataToSubmit.append("max_borrow_duration_days", maxDuration.toString());
+            }
+            formDataToSubmit.append("availability_notes", formData.availability_notes);
 
-        // Use formDataToSubmit with your apiService
-        const resp = await apiService.post(ItemRepository.CREATE, formDataToSubmit,{
-            headers: { "Content-Type": "multipart/form-data" }
-        });
-        console.log("Submitting FormData payload:", formDataToSubmit);
+            // Append each image file with key "images"
+            imageFiles.forEach(file => {
+                formDataToSubmit.append("images", file);
+            });
 
-        if (resp.status !== 200 && resp.status !== 201) {
-            toast({ variant: "destructive", title: "Error", description: "Failed to create item listing." });
-            return;
-        }
-        // Handle image uploads if needed
+            // Use formDataToSubmit with your apiService
+            const resp = await apiService.post(ItemRepository.CREATE, formDataToSubmit,{
+                headers: { "Content-Type": "multipart/form-data" }
+            });
+            console.log("Submitting FormData payload:", formDataToSubmit);
 
-        if (resp.status === 201 ){
-            toast({ variant: "success", title: "Item listed successfully!", description: "Your item is now available." });
-            navigate("/profile");
+            if (resp.status !== 200 && resp.status !== 201) {
+                toast({ variant: "destructive", title: "Error", description: "Failed to create item listing." });
+                setIsUploading(false); // End loading on error
+                return;
+            }
+
+            if (resp.status === 201 ){
+                toast({ variant: "success", title: "Item listed successfully!", description: "Your item is now available." });
+                navigate("/profile");
+            }
+        } catch (error) {
+            console.error("Error uploading listing:", error);
+            toast({ 
+                variant: "destructive", 
+                title: "Upload Error", 
+                description: "There was a problem uploading your listing. Please try again." 
+            });
+            setIsUploading(false); // End loading on catch error
         }
     };
 
@@ -288,6 +302,9 @@ const NewListingUltraModern = () => {
     // --- Render ---
     return (
         <div className="flex min-h-screen flex-col bg-gradient-to-b from-background to-muted/20">
+            {/* Show LoadingScreen during upload */}
+            {isUploading && <LoadingScreen baseMessage="Uploading your item" showHomePage={false} />}
+            
             <NavBar />
 
             <main className="flex-1 container py-8">

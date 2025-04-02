@@ -44,7 +44,7 @@ const textVariants: Variants = {
 };
 
 // --- Main Component ---
-export const LoadingScreen = ({ baseMessage = "Loading" }: { baseMessage?: string }) => {
+export const LoadingScreen = ({ baseMessage = "Loading", showHomePage = true }: { baseMessage?: string, showHomePage?: boolean  }) => {
     const [currentIcon, setCurrentIcon] = useState(0);
     const [ellipsisCount, setEllipsisCount] = useState(1);
     // --- State to control button visibility ---
@@ -150,7 +150,7 @@ export const LoadingScreen = ({ baseMessage = "Loading" }: { baseMessage?: strin
 
             {/* --- Conditionally Rendered Cancel Button --- */}
             {/* Render only if showCancelButton is true */}
-            {showCancelButton && (
+            {showCancelButton && showHomePage && (
                 <motion.div
                     className="animate-fade-in" // Use fade-in animation when it appears
                     // Removed inline animationDelay, appearance is controlled by mounting now
