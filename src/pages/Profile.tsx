@@ -73,10 +73,10 @@ const Profile = () => {
 
   // --- useEffect hooks for fetching and updating data (Same as previous version) ---
   useEffect(() => {
-    if (!reduxUserData.user && !userLoading) {
+    if (!reduxUserData?.user && !userLoading) {
       dispatch(fetchUser());
     }
-  }, [reduxUserData.user, dispatch, userLoading]);
+  }, [reduxUserData?.user, dispatch, userLoading]);
 
   useEffect(() => {
     const fetchedFirstName = get(reduxUserData, "user.first_name", userDummyData.firstName);
@@ -152,7 +152,7 @@ const Profile = () => {
     };
 
   // --- Loading and Error States (Same as previous version) ---
-  if (userLoading && !reduxUserData.user) { return <LoadingScreen baseMessage="Loading profile..." />; }
+  if (userLoading && !reduxUserData?.user) { return <LoadingScreen baseMessage="Loading profile..." />; }
   if (userError) {
       return ( <div className="flex min-h-screen flex-col items-center justify-center"> <NavBar /> <p className="text-destructive mt-10">Error: {userError}</p> <Button onClick={() => dispatch(fetchUser())} className="mt-4">Retry</Button> </div> );
   }
