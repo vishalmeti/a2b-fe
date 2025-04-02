@@ -37,7 +37,7 @@ export const ItemsTabContent: React.FC = () => {
         const transformedData = response.data.map((item: any) => ({
           id: String(item.id),
           name: item.title,
-          image: item.primary_image_key || 'https://placehold.co/600x400?text=No+Image',
+          image: item.images? item?.images[0] : 'https://placehold.co/600x400?text=No+Image',
           category: item.category?.name || 'Uncategorized',
           status: item.availability_status === 'AVAILABLE' ? 'Available' : 'Rented'
         }));

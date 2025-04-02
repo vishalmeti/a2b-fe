@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/components/NewListingUltraModern.tsx
 "use client"; // Add if using Next.js App Router
 
@@ -17,16 +18,19 @@ import {
 import { useToast } from "@/hooks/use-toast"; // Adjust path if needed
 // import { Separator } from "@/components/ui/separator";
 import {
-    ArrowLeft, Camera, X, Info, Check, ArrowRight, DollarSign, AlertCircle, FileImage, Settings2, ListChecks, ImagePlus
-} from "lucide-react";
+    ArrowLeft, Camera, X, Info, Check, ArrowRight, DollarSign, AlertCircle, FileImage, Settings2, ListChecks, ImagePlus, Clock
+} from "lucide-react"; // Added Clock icon
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils"; // Adjust path if needed
 
+import { apiService } from "@/services/apiService";
+import { ItemRepository } from "@/repositories/Item";
+import forEach from "lodash/forEach"; // Importing forEach from lodash
+import { useAuthRedirect } from "@/hooks/useAuthRedirect";
+
 // --- Data Mappings & Constants ---
 // Replace with actual data fetching/logic
-const categoryMap: { [key: string]: number } = { "Tools": 1, "Kitchen": 2, "Outdoors": 3, "Electronics": 4, "Party & Events": 5, "Sports": 6, "Gardening": 7, "Cleaning": 8, "Books": 9, "Kids & Toys": 10, "Vehicles": 11, "Other": 99 };
-const categoryList = Object.keys(categoryMap);
-const conditionList = [ { value: "NEW", label: "New" }, { value: "LIKE_NEW", label: "Like New" }, { value: "GOOD", label: "Good" }, { value: "FAIR", label: "Fair" }, { value: "POOR", label: "Poor (Worn)" } ];
+
 
 // --- Types ---
 type FormData = {
@@ -37,13 +41,15 @@ type FormData = {
     deposit_amount: string;
     borrowing_fee: string;
     pickup_details: string;
+    max_borrow_duration_days: string; // <-- Added field
+    availability_notes: string;      // <-- Added field
 };
 type FormErrors = Partial<Record<keyof FormData | 'images', string>>;
 
 // --- Stepper Configuration ---
 const steps = [
     { id: 0, title: "Item Details", description: "Core info description.", icon: FileImage },
-    { id: 1, title: "Borrowing Terms", description: "Fees, deposit & pickup.", icon: Settings2 },
+    { id: 1, title: "Borrowing Terms", description: "Fees, deposit, duration & pickup.", icon: Settings2 }, // Updated description
     { id: 2, title: "Add Photos", description: "Upload item images.", icon: Camera }
 ];
 
@@ -91,16 +97,39 @@ const VerticalStepper = ({ currentStep, stepsConfig }: { currentStep: number; st
 
 // --- Main Component ---
 const NewListingUltraModern = () => {
+    useAuthRedirect();
     const navigate = useNavigate();
     const { toast } = useToast();
     const [activeStep, setActiveStep] = useState(0);
     const [images, setImages] = useState<string[]>([]);
+    const [imageFiles, setImageFiles] = useState<File[]>([]); // <-- Added state for image files
     const [formData, setFormData] = useState<FormData>({
         title: "", category: "", description: "", condition: "",
         deposit_amount: "", borrowing_fee: "", pickup_details: "",
+        max_borrow_duration_days: "", // <-- Initialized field
+        availability_notes: "",      // <-- Initialized field
     });
     const [formErrors, setFormErrors] = useState<FormErrors>({});
+    // const categoryMap: { [key: string]: number } = { "Tools": 1, "Kitchen": 2, "Outdoors": 3, "Electronics": 4, "Party & Events": 5, "Sports": 6, "Gardening": 7, "Cleaning": 8, "Books": 9, "Kids & Toys": 10, "Vehicles": 11, "Other": 99 };
+    const [categoryMap, setcategoryMap] = useState({})
+    const categoryList = Object.keys(categoryMap);
+    const conditionList = [ { value: "NEW", label: "New" }, { value: "LIKE_NEW", label: "Like New" }, { value: "GOOD", label: "Good" }, { value: "FAIR", label: "Fair" }, { value: "POOR", label: "Poor" } ];
 
+    useEffect(() => {
+        const fetchCategories = async () => {
+            const categoriesList = await apiService.get(ItemRepository.GET_CATEGORIES);
+            const map = {};
+            forEach(categoriesList?.data, (category:any) => {
+                map[category.name] = category.id;
+            });
+            console.log("Categories List:", categoriesList);
+            console.log("Category Map:", map);
+            setcategoryMap(map);
+        }
+
+        fetchCategories()
+
+    }, []);
     // --- Input Handlers ---
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -108,23 +137,27 @@ const NewListingUltraModern = () => {
         if (formErrors[name as keyof FormData]) {
             setFormErrors(prev => ({ ...prev, [name]: undefined }));
         }
+        console.log("Form Data:", formData);
     };
     const handleSelectChange = (name: keyof FormData, value: string) => {
         setFormData((prev) => ({ ...prev, [name]: value }));
         if (formErrors[name]) {
             setFormErrors(prev => ({ ...prev, [name]: undefined }));
         }
+        console.log("Form Data:", formData);
     };
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (formErrors.images) {
              setFormErrors(prev => ({...prev, images: undefined}));
-         }
-        if (files && files.length > 0 && images.length + files.length <= 5) {
-            const newImageUrls = Array.from(files).map(file => URL.createObjectURL(file));
+        }
+        if (files && files.length > 0 && imageFiles.length + files.length <= 5) {
+            const newFiles = Array.from(files);
+            const newImageUrls = newFiles.map(file => URL.createObjectURL(file));
             setImages(prev => [...prev, ...newImageUrls].slice(0, 5));
+            setImageFiles(prev => [...prev, ...newFiles].slice(0, 5));
             toast({ variant: "success", title: "Images added", description: `${files.length} image${files.length === 1 ? "" : "s"} ready. Max 5 photos.` });
-        } else if (files && images.length + files.length > 5) {
+        } else if (files && imageFiles.length + files.length > 5) {
             toast({ variant: "destructive", title: "Limit Reached", description: `You can only upload up to 5 images.` });
         }
         e.target.value = "";
@@ -132,7 +165,8 @@ const NewListingUltraModern = () => {
      const handleRemoveImage = (indexToRemove: number) => {
          URL.revokeObjectURL(images[indexToRemove]);
          setImages(prev => prev.filter((_, i) => i !== indexToRemove));
-     };
+         setImageFiles(prev => prev.filter((_, i) => i !== indexToRemove));
+    };
 
     // --- Validation Logic ---
     const validateStep = useCallback((step: number): boolean => {
@@ -150,6 +184,15 @@ const NewListingUltraModern = () => {
             const deposit = parseFloat(currentData.deposit_amount || "0");
             if (isNaN(fee) || fee < 0) errors.borrowing_fee = "Invalid fee amount (must be 0 or positive).";
             if (isNaN(deposit) || deposit < 0) errors.deposit_amount = "Invalid deposit amount (must be 0 or positive).";
+            // <-- Start validation for new fields -->
+            if (currentData.max_borrow_duration_days) {
+                const duration = parseInt(currentData.max_borrow_duration_days, 10);
+                if (isNaN(duration) || duration <= 0) {
+                    errors.max_borrow_duration_days = "Max duration must be a positive number of days.";
+                }
+            }
+            // No specific validation for availability_notes unless required
+            // <-- End validation for new fields -->
         } else if (step === 2) {
             if (images.length === 0) errors.images = "Please upload at least one image.";
         }
@@ -172,14 +215,17 @@ const NewListingUltraModern = () => {
     };
 
     // --- Final Submission ---
-    const handleSubmit = (e: React.FormEvent) => {
+    // NOTE: The submit handler itself isn't changed per the request,
+    // but the new `formData` fields (`max_borrow_duration_days`, `availability_notes`)
+    // are available within this function if needed for the payload.
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const step1Valid = validateStep(0);
         const step2Valid = validateStep(1);
         const step3Valid = validateStep(2);
         if (!step1Valid || !step2Valid || !step3Valid) {
              toast({ variant: "destructive", title: "Validation Error", description: "Please fix all highlighted fields before submitting." });
-             if(!step1Valid) setActiveStep(0); 
+             if(!step1Valid) setActiveStep(0);
              else if (!step2Valid) setActiveStep(1);
              else if (!step3Valid) setActiveStep(2);
             return;
@@ -190,16 +236,45 @@ const NewListingUltraModern = () => {
         const depositAmountFormatted = parseFloat(formData.deposit_amount || "0").toFixed(2);
         const borrowingFeeFormatted = parseFloat(formData.borrowing_fee || "0").toFixed(2);
 
-        const payload = {
-            title: formData.title, description: formData.description, category: categoryId,
-            condition: formData.condition, deposit_amount: depositAmountFormatted,
-            borrowing_fee: borrowingFeeFormatted, pickup_details: formData.pickup_details,
-            // In real app, handle image uploads here and send URLs/IDs
-        };
-        console.log("Submitting Payload:", payload);
+        // Parse new field for max duration if provided
+        const maxDuration = formData.max_borrow_duration_days ? parseInt(formData.max_borrow_duration_days, 10) : null;
 
-        toast({ variant: "success", title: "Item listed successfully!", description: "Your item is now available." });
-        setTimeout(() => navigate("/profile"), 1500); // Redirect
+        // Create a new FormData instance
+        const formDataToSubmit = new FormData();
+        formDataToSubmit.append("title", formData.title);
+        formDataToSubmit.append("description", formData.description);
+        formDataToSubmit.append("category", categoryId.toString());
+        formDataToSubmit.append("condition", formData.condition);
+        formDataToSubmit.append("deposit_amount", depositAmountFormatted);
+        formDataToSubmit.append("borrowing_fee", borrowingFeeFormatted);
+        formDataToSubmit.append("pickup_details", formData.pickup_details);
+        // Append new fields if available
+        if (maxDuration !== null) {
+            formDataToSubmit.append("max_borrow_duration_days", maxDuration.toString());
+        }
+        formDataToSubmit.append("availability_notes", formData.availability_notes);
+
+        // Append each image file with key "images"
+        imageFiles.forEach(file => {
+            formDataToSubmit.append("images", file);
+        });
+
+        // Use formDataToSubmit with your apiService
+        const resp = await apiService.post(ItemRepository.CREATE, formDataToSubmit,{
+            headers: { "Content-Type": "multipart/form-data" }
+        });
+        console.log("Submitting FormData payload:", formDataToSubmit);
+
+        if (resp.status !== 200 && resp.status !== 201) {
+            toast({ variant: "destructive", title: "Error", description: "Failed to create item listing." });
+            return;
+        }
+        // Handle image uploads if needed
+
+        if (resp.status === 201 ){
+            toast({ variant: "success", title: "Item listed successfully!", description: "Your item is now available." });
+            navigate("/profile");
+        }
     };
 
     // --- Constants for JSX ---
@@ -311,9 +386,9 @@ const NewListingUltraModern = () => {
                                                 <CardDescription>Specify lending conditions. Required fields marked {requiredLabel}.</CardDescription>
                                             </CardHeader>
                                             <CardContent className="space-y-8 pt-2 pb-8">
-                                                {/* Costs Section */}
+                                                {/* Costs & Duration Section */}
                                                 <section className="space-y-4">
-                                                    <h3 className="text-sm font-medium text-muted-foreground border-b pb-2 mb-4">Costs (Optional)</h3>
+                                                    <h3 className="text-sm font-medium text-muted-foreground border-b pb-2 mb-4">Costs & Duration (Optional)</h3>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                         {/* Borrowing Fee */}
                                                         <div className="space-y-1.5 relative">
@@ -332,15 +407,30 @@ const NewListingUltraModern = () => {
                                                              {formErrors.deposit_amount && <p className="text-xs text-destructive flex items-center pt-1"><AlertCircle className="h-3 w-3 mr-1"/>{formErrors.deposit_amount}</p>}
                                                         </div>
                                                     </div>
+                                                    {/* Max Borrow Duration - Added Below the Grid */}
+                                                    <div className="space-y-1.5 pt-4">
+                                                        <Label htmlFor="max_borrow_duration_days">Max Borrow Duration (Days)</Label>
+                                                        <Input id="max_borrow_duration_days" name="max_borrow_duration_days" value={formData.max_borrow_duration_days} onChange={handleInputChange} type="number" min="1" step="1" placeholder="e.g., 7" className={cn("text-base", formErrors.max_borrow_duration_days && "border-destructive focus-visible:ring-destructive")} />
+                                                        <p className="text-xs text-muted-foreground pt-1">Optional - The maximum number of days one person can borrow the item.</p>
+                                                        {formErrors.max_borrow_duration_days && <p className="text-xs text-destructive flex items-center pt-1"><AlertCircle className="h-3 w-3 mr-1"/>{formErrors.max_borrow_duration_days}</p>}
+                                                    </div>
                                                 </section>
 
                                                 {/* Logistics Section */}
                                                 <section className="space-y-4 pt-4">
-                                                    <h3 className="text-sm font-medium text-muted-foreground border-b pb-2 mb-4">Pickup & Return</h3>
+                                                    <h3 className="text-sm font-medium text-muted-foreground border-b pb-2 mb-4">Pickup, Return & Availability</h3>
+                                                    {/* Pickup Details */}
                                                     <div className="space-y-1.5">
                                                         <Label htmlFor="pickup_details">Pickup/Dropoff Details {requiredLabel}</Label>
                                                         <Textarea id="pickup_details" name="pickup_details" value={formData.pickup_details} onChange={handleInputChange} placeholder="Describe exactly how & where the exchange will happen. Be specific about availability or location boundaries. e.g., 'Porch pickup weekdays 5-8 PM near downtown library. Please message first...'" rows={4} required className={cn("text-base", formErrors.pickup_details && "border-destructive focus-visible:ring-destructive")} />
                                                         {formErrors.pickup_details && <p className="text-xs text-destructive flex items-center pt-1"><AlertCircle className="h-3 w-3 mr-1"/>{formErrors.pickup_details}</p>}
+                                                    </div>
+                                                    {/* Availability Notes - Added Field */}
+                                                    <div className="space-y-1.5 pt-4">
+                                                        <Label htmlFor="availability_notes">Availability Notes (Optional)</Label>
+                                                        <Textarea id="availability_notes" name="availability_notes" value={formData.availability_notes} onChange={handleInputChange} placeholder="Add any specific notes about availability, e.g., 'Item not available June 5-10', 'Only available weekends', 'Check calendar link: [link]'" rows={3} className={cn("text-base", formErrors.availability_notes && "border-destructive focus-visible:ring-destructive")} />
+                                                        <p className="text-xs text-muted-foreground pt-1">Optional notes about when the item might be unavailable.</p>
+                                                        {formErrors.availability_notes && <p className="text-xs text-destructive flex items-center pt-1"><AlertCircle className="h-3 w-3 mr-1"/>{formErrors.availability_notes}</p>}
                                                     </div>
                                                 </section>
 
@@ -351,7 +441,8 @@ const NewListingUltraModern = () => {
                                                          <div>
                                                              <h4 className="font-semibold mb-1 text-sm text-blue-800 dark:text-blue-300">Tips for Successful Lending</h4>
                                                              <ul className="text-xs text-blue-700 dark:text-blue-400/90 space-y-1 list-disc pl-4">
-                                                                <li>Be very clear about pickup/return instructions & times.</li>
+                                                                <li>Specify a max borrow duration if needed.</li> {/* Added tip */}
+                                                                <li>Be very clear about pickup/return instructions & times in details/notes.</li>
                                                                 <li>Agree on the borrow duration beforehand via messages.</li>
                                                                 <li>Consider taking quick photos before lending as proof of condition.</li>
                                                                 <li>Be responsive to borrower messages.</li>
@@ -402,7 +493,7 @@ const NewListingUltraModern = () => {
                                                         {formErrors.images && (<p className="text-xs text-destructive flex items-center -mt-2 mb-2"><AlertCircle className="h-3 w-3 mr-1"/>{formErrors.images}</p>)}
                                                         <div className="flex items-start"> <Info className="h-4 w-4 mr-2 mt-0.5 text-muted-foreground flex-shrink-0" /> <p className="text-xs text-muted-foreground">Upload 1-5 clear photos (JPG, PNG, WEBP). Drag & drop should work too!</p> </div>
                                                     </div>
-                                                    
+
                                                     <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 p-4 rounded-lg !mt-8">
                                                         <div className="flex items-start">
                                                             <Info className="h-5 w-5 mr-3 mt-0.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
@@ -421,7 +512,7 @@ const NewListingUltraModern = () => {
                                             </CardContent>
                                             <CardFooter className="flex justify-between border-t pt-6 bg-muted/20">
                                                 <Button type="button" variant="outline" onClick={goToPrevStep}> <ArrowLeft className="mr-2 h-4 w-4" /> Back </Button>
-                                                <Button type="submit" size="lg"> <Check className="mr-2 h-4 w-4" /> List Item Now </Button>
+                                                <Button type="submit" size="lg"> <Check className="mr-2 h-4 w-4"/> List Item Now </Button>
                                             </CardFooter>
                                         </form>
                                     )}
