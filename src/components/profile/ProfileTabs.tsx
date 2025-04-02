@@ -1,51 +1,48 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Package, Calendar, Star } from "lucide-react";
-import ProfileItems from "./ProfileItems";
-import BorrowHistory from "./BorrowHistory";
-import ReviewsList from "./ReviewsList";
+import { ItemsTabContent } from "./ItemsTabContent";
+import { HistoryTabContent } from "./HistoryTabContent";
+import { ReviewsTabContent } from "./ReviewsTabContent";
 
 interface ProfileTabsProps {
-  userData: {
-    itemsListed: any[];
-    borrowingHistory: any[];
-    reviews: any[];
-  };
+  userData: any;
   activeTab: string;
-  setActiveTab: (value: string) => void;
+  setActiveTab: (tab: string) => void;
+  formatDate: (date: string) => string;
 }
 
-const ProfileTabs = ({ userData, activeTab, setActiveTab }: ProfileTabsProps) => {
+export const ProfileTabs: React.FC<ProfileTabsProps> = ({
+  userData,
+  activeTab,
+  setActiveTab,
+  formatDate,
+}) => {
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className="grid grid-cols-3 mb-6">
-        <TabsTrigger value="items">
-          <Package className="h-4 w-4 mr-2" />
-          My Items
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <TabsList className="grid w-full grid-cols-3 mb-6 bg-gray-200 dark:bg-gray-700/80 rounded-lg p-1">
+        <TabsTrigger value="items" className="text-gray-600 dark:text-gray-300 data-[state=active]:bg-background dark:data-[state=active]:bg-gray-900 data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-md py-1.5">
+          <Package className="h-4 w-4 mr-1.5" /> My Items ({userData.itemsListed.length})
         </TabsTrigger>
-        <TabsTrigger value="history">
-          <Calendar className="h-4 w-4 mr-2" />
-          Borrow History
+        <TabsTrigger value="history" className="text-gray-600 dark:text-gray-300 data-[state=active]:bg-background dark:data-[state=active]:bg-gray-900 data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-md py-1.5">
+          <Calendar className="h-4 w-4 mr-1.5" /> History ({userData.borrowingHistory.length})
         </TabsTrigger>
-        <TabsTrigger value="reviews">
-          <Star className="h-4 w-4 mr-2" />
-          Reviews
+        <TabsTrigger value="reviews" className="text-gray-600 dark:text-gray-300 data-[state=active]:bg-background dark:data-[state=active]:bg-gray-900 data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-md py-1.5">
+          <Star className="h-4 w-4 mr-1.5" /> Reviews ({userData.reviews.length})
         </TabsTrigger>
       </TabsList>
-      
+
       <TabsContent value="items">
-        <ProfileItems items={userData.itemsListed} />
+        <ItemsTabContent items={userData.itemsListed} />
       </TabsContent>
-      
+
       <TabsContent value="history">
-        <BorrowHistory items={userData.borrowingHistory} />
+        <HistoryTabContent history={userData.borrowingHistory} formatDate={formatDate} />
       </TabsContent>
-      
+
       <TabsContent value="reviews">
-        <ReviewsList reviews={userData.reviews} />
+        <ReviewsTabContent reviews={userData.reviews} formatDate={formatDate} />
       </TabsContent>
     </Tabs>
   );
 };
-
-export default ProfileTabs;
