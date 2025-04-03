@@ -17,6 +17,14 @@ export const fetchUser = createAsyncThunk(
   }
 );
 
+// export const fetchUserById = createAsyncThunk(
+//   'users/fetchById',
+//   async (id: string | number) => {
+//     const response = await apiService.get(`/users/${id}`);
+//     return response.data;
+//   }
+// );
+
 const userSlice = createSlice({
   name: 'user',
   initialState: {
@@ -46,6 +54,21 @@ const userSlice = createSlice({
         state.loading = false;
         state.error = action.error.message || 'Failed to fetch user data';
       });
+    // builder
+    //   .addCase(fetchUserById.pending, (state) => {
+    //     state.loading = true;
+    //     state.error = null;
+    //   })
+    //   .addCase(fetchUserById.fulfilled, (state, action) => {
+    //     state.loading = false;
+    //     state.data = action.payload;
+    //   })
+    //   .addCase(fetchUserById.rejected, (state, action) => {
+    //     state.loading = false;
+    //     state.error = action.error.message || 'Failed to fetch user data';
+    //   }
+    //   );
+  
   },
 });
 
