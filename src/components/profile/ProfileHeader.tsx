@@ -3,10 +3,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ImageUploadModal } from "@/components/modals/ImageUploadModal";
-import { Camera, MapPin, Clock, Star, Package, ThumbsUp, Pencil, Check, X, PlusCircle } from "lucide-react";
+import { Camera, MapPin, Clock, Star, Package, ThumbsUp, Pencil, Check, X, PlusCircle, ImageIcon } from "lucide-react";
 import { ChangeEvent } from "react";
 import { Link } from "react-router-dom";
-
 
 interface ProfileHeaderProps {
   userData: any;
@@ -22,6 +21,7 @@ interface ProfileHeaderProps {
   handleCancelEdit: () => void;
   setEditMode: (edit: boolean) => void;
   onProfileUpload: (files: any) => void;
+  onCoverUpload: (files: any) => void; // New prop for cover photo uploads
   formatMemberSince: (date: string) => string;
 }
 
@@ -34,21 +34,37 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   handleCancelEdit,
   setEditMode,
   onProfileUpload,
+  onCoverUpload,
   formatMemberSince,
 }) => {
   return (
-    <section className="relative bg-gradient-to-r from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pb-24 pt-10 md:pt-16">
-      <div className="absolute inset-0 h-48 md:h-64 overflow-hidden opacity-30">
+    <section className="relative bg-gradient-to-r from-purple-100 via-white to-blue-200 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pb-20 pt-10 md:pt-16">
+      <div className="absolute inset-0 h-48 md:h-64 overflow-hidden opacity-30 group">
         {userData.coverPhoto ? (
           <img src={userData.coverPhoto} alt="Cover" className="w-full h-full object-cover" />
         ) : (
           <div className="h-full w-full bg-gradient-to-r from-sky-100 to-indigo-200 dark:from-sky-900 dark:to-indigo-900"></div>
         )}
+
+        {/* Cover Photo Edit Button */}
+        <div className={`absolute right-4 bottom-4 transition-opacity duration-300 ${editMode ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+          <ImageUploadModal
+            maxImages={1}
+            onImagesSelected={onCoverUpload}
+            title="Update Cover Photo"
+            description="Select an image for your profile cover."
+            trigger={
+              <Button size="sm" variant="secondary" className="bg-black/70 hover:bg-black/80 text-white shadow-md">
+                <ImageIcon className="h-4 w-4 mr-1.5" /> {userData.coverPhoto ? "Change Cover" : "Add Cover Photo"}
+              </Button>
+            }
+          />
+        </div>
       </div>
 
       <div className="container px-4 md:px-6 relative z-10">
         <div className="flex flex-col md:flex-row items-center md:items-end gap-6 md:gap-8">
-          {/* Avatar & Upload */}
+          {/* Avatar & Upload - This already has its own group class */}
           <ImageUploadModal
             maxImages={1}
             onImagesSelected={onProfileUpload}
@@ -95,7 +111,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 {userData.firstName} {userData.lastName}
               </h1>
             )}
-            
+
             {/* Location/Member Since */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-center md:justify-start gap-x-5 gap-y-1 text-sm text-gray-600 dark:text-gray-400 mb-3">
               <div className="flex items-center justify-center md:justify-start min-h-[28px]">
@@ -145,25 +161,27 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           {/* Action Buttons */}
           <div className="flex space-x-2 order-3 md:order-none self-center md:self-end">
             {editMode ? (
-              <>
+              <div className="flex flex-col space-y-2">
                 <Button size="sm" onClick={handleSaveProfile} className="bg-green-600 hover:bg-green-700 text-white">
                   <Check className="h-4 w-4 mr-1" /> Save
                 </Button>
                 <Button size="sm" variant="outline" onClick={handleCancelEdit}>
                   <X className="h-4 w-4 mr-1" /> Cancel
                 </Button>
-              </>
+              </div>
             ) : (
               <>
-              <div className="flex justify-end mb-4">
-                <Link to="/new-listing">
-                  <Button size="sm"><PlusCircle className="h-4 w-4 mr-1.5" />Add New Item</Button>
-                </Link>
-              </div>
-              <Button size="sm" variant="outline" onClick={() => setEditMode(true)} className="bg-white dark:bg-gray-700 dark:text-white">
-                <Pencil className="h-4 w-4 mr-1.5" /> Edit Profile
-              </Button>
-          </>
+                <div className="flex flex-col space-y-2">
+                  <div className="flex justify-end">
+                    <Link to="/new-listing">
+                      <Button size="sm"><PlusCircle className="h-4 w-4 mr-1.5" />Add New Item</Button>
+                    </Link>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={() => setEditMode(true)} className="bg-white dark:bg-gray-700 dark:text-white">
+                    <Pencil className="h-4 w-4 mr-1.5" /> Edit Profile
+                  </Button>
+                </div>
+              </>
             )}
           </div>
         </div>

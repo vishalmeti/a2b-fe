@@ -24,7 +24,6 @@ const userDummyData = {
   lastName: "Smith",
   email: "alex.smith@example.com",
   avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-  coverPhoto: "https://images.unsplash.com/photo-1506102383123-c8ef1e872756?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80",
   bio: "DIY enthusiast sharing tools with the community. Passionate about sustainable living and collaborative consumption. Need something for a project? Just ask!",
   location: "Brighton Heights, Pittsburgh, PA",
   memberSince: "2022-01-15T10:00:00Z",
@@ -75,7 +74,7 @@ const Profile = () => {
     const fetchedBio = get(reduxUserData, "profile.bio", userDummyData.bio);
     const fetchedLocation = get(reduxUserData, "profile.location", userDummyData.location);
     const fetchedMemberSince = get(reduxUserData, "user.date_joined", userDummyData.memberSince);
-    const fetchedCoverPhoto = get(reduxUserData, "profile.cover_photo_url", userDummyData.coverPhoto);
+    const fetchedCoverPhoto = get(reduxUserData, "cover_image_url", null);
     const fetchedStats = { ...userDummyData.stats, ...get(reduxUserData, "profile.stats", {}) };
     const fetchedItems = get(reduxUserData, "profile.itemsListed", userDummyData.itemsListed);
     const fetchedHistory = get(reduxUserData, "profile.borrowingHistory", userDummyData.borrowingHistory);
@@ -144,6 +143,28 @@ const Profile = () => {
     }
   };
 
+  const onCoverUpload = async (files: any) => {
+    if (files.length === 0) return;
+    const file = files[0];
+    const uploadFormData = new FormData();
+    uploadFormData.append('cover-image', file);
+    setIsUploadingImage(true);
+    try {
+      const resp = await apiService.post("/users/cover-image/", uploadFormData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      const coverImageUrl = get(resp, "data.presigned_url", null);
+      console.log("Cover image URL:", coverImageUrl);
+      dispatch(updateUserData({ ...reduxUserData, cover_image_url: coverImageUrl }));
+      toast({ variant: "success", title: "Cover photo updated" });
+    } catch (error) {
+      console.error("Error uploading cover image:", error);
+      toast({ variant: "destructive", title: "Upload failed" });
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
   // Loading and error states
   if (userLoading && !reduxUserData?.user) {
     return <LoadingScreen baseMessage="Loading profile..." />;
@@ -162,7 +183,7 @@ const Profile = () => {
   return (
     <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-950">
       <NavBar />
-      {isUploadingImage && <LoadingScreen baseMessage="Uploading profile picture..." />}
+      {isUploadingImage && <LoadingScreen baseMessage="Updating profile .." />}
 
       <main className="flex-1">
         {/* Hero Section with Profile Header */}
@@ -175,7 +196,8 @@ const Profile = () => {
           handleCancelEdit={handleCancelEdit}
           setEditMode={setEditMode}
           onProfileUpload={onProfileUpload}
-          formatMemberSince={formatMemberSince}
+          formatMemberSince={formatMemberSince} 
+          onCoverUpload={onCoverUpload}
         />
 
         {/* Main Content Area */}
