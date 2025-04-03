@@ -23,14 +23,9 @@ import {
 import { 
   MapPin, Search, Filter, Grid3X3, List, Loader2
 } from "lucide-react";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import type { RootState } from '@/store/store';
+import SkeletonLoader from "@/components/items/SkeletonLoader";
 
 import { fetchAllItems, Item } from "@/store/slices/itemsSlice";
 
@@ -247,12 +242,7 @@ const Browse = () => {
 
   const renderContent = () => {
     if (loading) {
-      return (
-        <div className="flex flex-col items-center justify-center py-12">
-          <Loader2 className="h-12 w-12 animate-spin text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">Loading items...</p>
-        </div>
-      );
+      return <SkeletonLoader listView={viewMode === "list"} />;
     }
 
     if (error) {
