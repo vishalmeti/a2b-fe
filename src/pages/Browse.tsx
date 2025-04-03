@@ -45,7 +45,7 @@ const getItemDistance = (item: any): string => {
 // Helper function to transform API item to UI item format
 const transformItemForUI = (item: any) => {
   // Handle images - might be an array of strings or an array of objects
-  let mainImage = "https://images.unsplash.com/photo-1593305841991-05c297ba4575?q=80&w=2957&auto=format&fit=crop";
+  let mainImage = "https://placehold.co/600x400?text=No+Image";
   
   if (item.images && item.images.length > 0) {
     if (typeof item.images[0] === 'string') {
