@@ -51,6 +51,8 @@ export interface Item {
 
 export interface ItemsState {
   itemsById: Record<string, Item>;
+  allIds: number[];
+  myItemIds: number[];
   loading: boolean;
   error: string | null;
 }
@@ -63,10 +65,31 @@ export const fetchItemById = createAsyncThunk(
   }
 );
 
+
+export const fetchAllItems = createAsyncThunk(
+  'items/fetchAll',
+  async (_, { getState }) => {
+    const response = await apiService.get('/items/');
+    return { data: response.data, globalState: getState() };
+  }
+);
+
+export const fetchMyItems = createAsyncThunk(
+  'items/fetchMyItems',
+  async (_, { getState }) => {
+    const state = getState() as { user: { data?: { user?: { id?: number } } } };
+    const userId = state.user.data?.user?.id;
+    const response = await apiService.get('/items/?user_id=' + userId);
+    return { data: response.data, globalState: getState() };
+  }
+);
+
 const itemsSlice = createSlice({
   name: 'items',
   initialState: {
     itemsById: {},
+    allIds: [],
+    myItemIds: [],
     loading: false,
     error: null,
   } as ItemsState,
@@ -84,7 +107,66 @@ const itemsSlice = createSlice({
       .addCase(fetchItemById.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Failed to fetch item';
+      })
+
+      // Fetch all items
+      .addCase(fetchAllItems.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAllItems.fulfilled, (state, action) => {
+        state.loading = false;
+        // Store items by ID
+        const newItemsById: Record<string, Item> = {};
+        const newAllIds: number[] = [];
+        const newMyItemIds: number[] = [];
+
+        const globalState = action.payload.globalState as { user: { data: { user: { id?: number } } } };
+        action.payload.data.forEach((item: Item) => {
+          newItemsById[item.id] = item;
+          newAllIds.push(item.id);
+          console.log("GLobAL STATE", globalState);
+          if (item.owner.user.id === globalState.user?.data?.user?.id) {
+            newMyItemIds.push(item.id);
+          }
+        });
+        
+        state.itemsById = newItemsById;
+        state.allIds = newAllIds;
+        state.myItemIds = newMyItemIds;
+      })
+      .addCase(fetchAllItems.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to fetch items';
       });
+
+      // Fetch my items
+      builder
+      .addCase(fetchMyItems.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      }
+      )
+      .addCase(fetchMyItems.fulfilled, (state, action) => {
+        state.loading = false;
+        // Store items by ID
+        const newMyItemIds: number[] = [];
+        const newItemsById: Record<string, Item> = {};
+
+        action.payload.data.forEach((item: Item) => {
+          newItemsById[item.id] = item;
+          newMyItemIds.push(item.id);
+        });
+        
+        state.myItemIds = newMyItemIds;
+        state.itemsById = { ...state.itemsById, ...newItemsById };
+      }
+      )
+      .addCase(fetchMyItems.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to fetch items';
+      }
+      );
   },
 });
 

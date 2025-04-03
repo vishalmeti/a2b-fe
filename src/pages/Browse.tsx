@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { apiService } from "@/services/apiService";
 import { ItemRepository } from "@/repositories/Item";
 import { Link } from "react-router-dom";
@@ -19,7 +21,7 @@ import {
   Slider
 } from "@/components/ui/slider";
 import { 
-  MapPin, Search, Filter, Grid3X3, List 
+  MapPin, Search, Filter, Grid3X3, List, Loader2
 } from "lucide-react";
 import {
   Tabs,
@@ -28,6 +30,9 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
+import type { RootState } from '@/store/store';
+
+import { fetchAllItems, Item } from "@/store/slices/itemsSlice";
 
 interface Category {
   id: number;
@@ -35,115 +40,65 @@ interface Category {
   icon: string | null;
 }
 
-const items = [
-  {
-    id: 1,
-    name: "Power Drill",
-    description: "Cordless power drill, perfect for small home projects",
-    image: "https://images.unsplash.com/photo-1504148455328-c376907d081c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
+// Helper function to calculate distance from an item
+const getItemDistance = (item: any): string => {
+  // In a real app, this would calculate distance based on user's location
+  // For now, return random distance between 0.1 and 5 miles
+  return (Math.random() * 5 + 0.1).toFixed(1) + " miles";
+};
+
+// Helper function to transform API item to UI item format
+const transformItemForUI = (item: any) => {
+  // Handle images - might be an array of strings or an array of objects
+  let mainImage = "https://images.unsplash.com/photo-1593305841991-05c297ba4575?q=80&w=2957&auto=format&fit=crop";
+  
+  if (item.images && item.images.length > 0) {
+    if (typeof item.images[0] === 'string') {
+      mainImage = item.images[0];
+    } else if (item.images[0].image_url) {
+      mainImage = item.images[0].image_url;
+    }
+  }
+  
+  // Handle owner information
+  const ownerName = item.owner?.user?.first_name && item.owner?.user?.last_name 
+    ? `${item.owner.user.first_name} ${item.owner.user.last_name}` 
+    : item.owner?.user?.username || item.owner_username || "Unknown";
+  
+  const ownerAvatar = item.owner?.profile_picture_url || 
+    `https://ui-avatars.com/api/?name=${ownerName.replace(/\s+/g, "+")}&background=random`;
+  
+  const rating = item.owner?.average_lender_rating || item.average_item_rating || 4.5;
+
+  return {
+    id: item.id,
+    name: item.title,
+    description: item.description || `${item.title} in ${item.condition?.toLowerCase().replace('_', ' ') || 'good'} condition`,
+    image: mainImage,
     owner: {
-      name: "Alex Smith",
-      avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-      rating: 4.8,
+      name: ownerName,
+      avatar: ownerAvatar,
+      rating: rating,
     },
-    distance: "0.5 miles",
-    category: "Tools",
-  },
-  {
-    id: 2,
-    name: "Stand Mixer",
-    description: "Professional stand mixer, great for baking",
-    image: "https://images.unsplash.com/photo-1594631252845-29fc4cc8cde9?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
-    owner: {
-      name: "Maria Johnson",
-      avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-      rating: 4.9,
-    },
-    distance: "0.7 miles",
-    category: "Kitchen",
-  },
-  {
-    id: 3,
-    name: "Camping Tent",
-    description: "4-person tent, waterproof and easy to set up",
-    image: "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
-    owner: {
-      name: "David Brown",
-      avatar: "https://randomuser.me/api/portraits/men/75.jpg",
-      rating: 4.7,
-    },
-    distance: "1.2 miles",
-    category: "Outdoors",
-  },
-  {
-    id: 4,
-    name: "Air Fryer",
-    description: "Large capacity air fryer with digital controls",
-    image: "https://images.unsplash.com/photo-1626074353765-517a681e40be?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
-    owner: {
-      name: "Sarah Wilson",
-      avatar: "https://randomuser.me/api/portraits/women/63.jpg",
-      rating: 4.6,
-    },
-    distance: "0.9 miles",
-    category: "Kitchen",
-  },
-  {
-    id: 5,
-    name: "Monitor",
-    description: "Gaming monitor in excellent condition",
-    image: "https://images.unsplash.com/photo-1593305841991-05c297ba4575?q=80&w=2957&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    owner: {
-      name: "Michael Roberts",
-      avatar: "https://randomuser.me/api/portraits/men/42.jpg",
-      rating: 4.5,
-    },
-    distance: "1.8 miles",
-    category: "Gaming",
-  },
-  {
-    id: 6,
-    name: "Projector",
-    description: "HD projector with HDMI and USB connections",
-    image: "https://images.unsplash.com/photo-1634986666676-ec8fd927c23d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
-    owner: {
-      name: "Jennifer Lee",
-      avatar: "https://randomuser.me/api/portraits/women/22.jpg",
-      rating: 4.9,
-    },
-    distance: "1.3 miles",
-    category: "Electronics",
-  },
-  {
-    id: 7,
-    name: "Folding Table",
-    description: "6-foot folding table, perfect for parties",
-    image: "https://plus.unsplash.com/premium_vector-1722152242334-bb43bb038e36?q=80&w=3560&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    owner: {
-      name: "Robert Thomas",
-      avatar: "https://randomuser.me/api/portraits/men/22.jpg",
-      rating: 4.6,
-    },
-    distance: "0.6 miles",
-    category: "Party & Events",
-  },
-  {
-    id: 8,
-    name: "Pressure Washer",
-    description: "Electric pressure washer, great for cleaning patios and decks",
-    image: "https://plus.unsplash.com/premium_vector-1722152242334-bb43bb038e36?q=80&w=3560&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    owner: {
-      name: "Lisa Garcia",
-      avatar: "https://randomuser.me/api/portraits/women/28.jpg",
-      rating: 4.7,
-    },
-    distance: "1.1 miles",
-    category: "Cleaning",
-  },
-];
+    distance: getItemDistance(item),
+    category: item.category?.name || "Uncategorized",
+    condition: item.condition?.replace('_', ' ').toLowerCase() || "good condition",
+    price: parseFloat(item.borrowing_fee) > 0 ? 
+      `$${parseFloat(item.borrowing_fee).toFixed(2)}/day` : 
+      "Free",
+    deposit: parseFloat(item.deposit_amount) > 0 ? 
+      `$${parseFloat(item.deposit_amount).toFixed(2)}` : 
+      "No deposit",
+    maxDuration: item.max_borrow_duration_days || 7,
+    community: item.community_name || "Local Community",
+  };
+};
 
 const Browse = () => {
   useAuthRedirect();
+  const dispatch = useDispatch();
+  const { itemsById, allIds, loading, error } = useSelector((state: RootState) => state.items);
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [distance, setDistance] = useState([5]);
@@ -154,23 +109,23 @@ const Browse = () => {
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+    // Dispatch action to fetch all items
+    dispatch(fetchAllItems() as any);
+  }, [dispatch]);
 
   const fetchCategories = async () => {
     try {
       setIsLoadingCategories(true);
       setCategoryError(null);
-      const response = await apiService.get(ItemRepository.GET_CATEGORIES); // Update with your actual API endpoint
+      const response = await apiService.get(ItemRepository.GET_CATEGORIES);
       if (response.status < 200 || response.status >= 300) {
         throw new Error('Failed to fetch categories');
       }
       const data = response.data;
-      console.log("Categories response:", data);
       setCategories([
         { id: 0, name: "All Categories", icon: null },
         ...data
       ]);
-      console.log("Categories fetched successfully:", data);
     } catch (error) {
       console.error('Error fetching categories:', error);
       setCategoryError(error instanceof Error ? error.message : 'Failed to load categories');
@@ -179,8 +134,11 @@ const Browse = () => {
     }
   };
 
+  // Transform items from the store to the UI format
+  const storeItems = allIds.map(id => transformItemForUI(itemsById[id]));
+
   // Filter items based on search query, category, and distance
-  const filteredItems = items.filter((item) => {
+  const filteredItems = storeItems.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           item.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === "All Categories" || item.category === selectedCategory;
@@ -287,6 +245,57 @@ const Browse = () => {
     </div>
   );
 
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="flex flex-col items-center justify-center py-12">
+          <Loader2 className="h-12 w-12 animate-spin text-muted-foreground mb-4" />
+          <p className="text-muted-foreground">Loading items...</p>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <div className="rounded-full bg-destructive/10 p-6 mb-4">
+            <Search className="h-10 w-10 text-destructive" />
+          </div>
+          <h3 className="text-lg font-semibold mb-2">Error loading items</h3>
+          <p className="text-muted-foreground max-w-md mb-6">
+            {error}
+          </p>
+          <Button onClick={() => dispatch(fetchAllItems() as any)}>
+            Try Again
+          </Button>
+        </div>
+      );
+    }
+
+    if (filteredItems.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <div className="rounded-full bg-muted p-6 mb-4">
+            <Search className="h-10 w-10 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-semibold mb-2">No items found</h3>
+          <p className="text-muted-foreground max-w-md mb-6">
+            We couldn't find any items matching your search criteria. Try adjusting your filters or search terms.
+          </p>
+          <Button onClick={() => {
+            setSearchQuery("");
+            setSelectedCategory("All Categories");
+            setDistance([5]);
+          }}>
+            Reset Filters
+          </Button>
+        </div>
+      );
+    }
+
+    return viewMode === "grid" ? <GridView /> : <ListView />;
+  };
+
   return (
     <div className="flex min-h-screen flex-col">
       <NavBar />
@@ -380,7 +389,7 @@ const Browse = () => {
             <div className="pt-4">
               <div className="mb-4 flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">
-                  Showing {filteredItems.length} item{filteredItems.length !== 1 ? 's' : ''}
+                  {!loading && `Showing ${filteredItems.length} item${filteredItems.length !== 1 ? 's' : ''}`}
                 </p>
                 <Select defaultValue="relevance">
                   <SelectTrigger className="w-[180px]">
@@ -395,26 +404,7 @@ const Browse = () => {
                 </Select>
               </div>
 
-              {filteredItems.length > 0 ? (
-                viewMode === "grid" ? <GridView /> : <ListView />
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="rounded-full bg-muted p-6 mb-4">
-                    <Search className="h-10 w-10 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2">No items found</h3>
-                  <p className="text-muted-foreground max-w-md mb-6">
-                    We couldn't find any items matching your search criteria. Try adjusting your filters or search terms.
-                  </p>
-                  <Button onClick={() => {
-                    setSearchQuery("");
-                    setSelectedCategory("All Categories");
-                    setDistance([5]);
-                  }}>
-                    Reset Filters
-                  </Button>
-                </div>
-              )}
+              {renderContent()}
             </div>
           </div>
         </div>

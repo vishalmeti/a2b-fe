@@ -5,11 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PlusCircle, Pencil, Package, Loader2 } from "lucide-react";
-import { apiService } from "@/services/apiService";
-import { UserRepository } from "@/repositories/User";
 import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '@/store/store';
-
+import { fetchMyItems, type Item as StoreItem } from '@/store/slices/itemsSlice';
 
 interface Item {
   id: string;
@@ -20,63 +18,55 @@ interface Item {
 }
 
 export const ItemsTabContent: React.FC = () => {
-  const [items, setItems] = useState<Item[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { data } = useSelector((state: RootState) => state.user);
-
+  const dispatch = useDispatch<AppDispatch>();
+  const { myItemIds, itemsById } = useSelector((state: RootState) => state.items);
+  
+  // Transform store items to component's item format
+  const items: Item[] = myItemIds.map(id => {
+    const item = itemsById[id];
+    return {
+      id: String(item.id),
+      name: item.title,
+      image: typeof item.images?.[0] === 'string' ? item.images[0] : 'https://placehold.co/600x400?text=No+Image',
+      category: item.category?.name || 'Uncategorized',
+      status: item.availability_status === 'AVAILABLE' ? 'Available' : 'Rented'
+    };
+  });
 
   useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        setLoading(true);
-        // Using apiService instead of direct fetch
-        const response = await apiService.get(UserRepository.GET_MY_ITEMS(data?.user?.id));
-        
-        // Transform the API response to match the Item interface
-        const transformedData = response.data.map((item: any) => ({
-          id: String(item.id),
-          name: item.title,
-          image: item.images? item?.images[0] : 'https://placehold.co/600x400?text=No+Image',
-          category: item.category?.name || 'Uncategorized',
-          status: item.availability_status === 'AVAILABLE' ? 'Available' : 'Rented'
-        }));
-        
-        setItems(transformedData);
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
+    // Fetch my items from the store
+    dispatch(fetchMyItems())
+      .unwrap()
+      .catch(err => {
+        setError(err.message || 'An error occurred while fetching your items');
         console.error('Error fetching items:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+      });
+  }, [dispatch]);
 
-    fetchItems();
-  }, []);
+  // if (loading) {
+  //   return (
+  //     <Card className="shadow-sm dark:bg-gray-800/50 border-gray-200 dark:border-gray-700/60">
+  //       <CardContent className="text-center py-16">
+  //         <Loader2 className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4 animate-spin" />
+  //         <p className="text-gray-500 dark:text-gray-400">Loading items...</p>
+  //       </CardContent>
+  //     </Card>
+  //   );
+  // }
 
-  if (loading) {
-    return (
-      <Card className="shadow-sm dark:bg-gray-800/50 border-gray-200 dark:border-gray-700/60">
-        <CardContent className="text-center py-16">
-          <Loader2 className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4 animate-spin" />
-          <p className="text-gray-500 dark:text-gray-400">Loading items...</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card className="shadow-sm dark:bg-gray-800/50 border-gray-200 dark:border-gray-700/60">
-        <CardContent className="text-center py-16">
-          <h3 className="text-lg font-semibold text-red-600 dark:text-red-400">Error loading items</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 mb-4">{error}</p>
-          <Button onClick={() => window.location.reload()}>Try Again</Button>
-        </CardContent>
-      </Card>
-    );
-  }
+  // if (error) {
+  //   return (
+  //     <Card className="shadow-sm dark:bg-gray-800/50 border-gray-200 dark:border-gray-700/60">
+  //       <CardContent className="text-center py-16">
+  //         <h3 className="text-lg font-semibold text-red-600 dark:text-red-400">Error loading items</h3>
+  //         <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 mb-4">{error}</p>
+  //         <Button onClick={() => dispatch(fetchMyItems())}>Try Again</Button>
+  //       </CardContent>
+  //     </Card>
+  //   );
+  // }
 
   return (
     <>      
