@@ -245,6 +245,31 @@ const itemsSlice = createSlice({
           images: listOfImages
         };
       })
+      .addCase(updateItemData.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to update item';
+      });
+      // Delete item
+      builder
+      .addCase(deleteItem.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      }
+      )
+      .addCase(deleteItem.fulfilled, (state, action) => {
+        state.loading = false;
+        const itemId = action.meta.arg;
+        delete state.itemsById[itemId];
+        state.allIds = state.allIds.filter((id) => id !== itemId);
+        state.myItemIds = state.myItemIds.filter((id) => id !== itemId);
+      }
+      )
+      .addCase(deleteItem.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to delete item';
+      }
+      );
+
   },
 });
 

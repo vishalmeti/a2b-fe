@@ -36,7 +36,7 @@ export const OwnerCard = ({ owner, communityName }: OwnerCardProps) => {
       <CardContent>
         <div className="flex items-center gap-4 mb-4">
           <Avatar className="h-12 w-12">
-            <AvatarImage src={owner.profile_picture_url} alt={ownerName} />
+            <AvatarImage src={owner.profile_picture_url} alt={ownerName} className="object-cover" />
             <AvatarFallback>{ownerInitial}</AvatarFallback>
           </Avatar>
           <div>
