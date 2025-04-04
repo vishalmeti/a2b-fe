@@ -33,6 +33,26 @@ export const ItemsTabContent: React.FC = () => {
     UNAVAILABLE: 'Unavailable'
   };
 
+  // Status style mapping for different status types
+  const statusStyles = {
+    Available: {
+      variant: "outline" as const,
+      className: "border-green-500 bg-green-50 text-green-700 dark:bg-green-900/30 dark:border-green-700 dark:text-green-400"
+    },
+    Booked: {
+      variant: "outline" as const,
+      className: "border-amber-500 bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:border-amber-700 dark:text-amber-400"
+    },
+    Rented: {
+      variant: "outline" as const,
+      className: "border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:border-blue-700 dark:text-blue-400"
+    },
+    Unavailable: {
+      variant: "outline" as const,
+      className: "border-gray-500 bg-gray-50 text-gray-700 dark:bg-gray-900/30 dark:border-gray-700 dark:text-gray-400"
+    }
+  };
+
   // Transform store items to component's item format
   const items: Item[] = myItemIds.map(id => {
     const item = itemsById[id];
@@ -96,8 +116,8 @@ export const ItemsTabContent: React.FC = () => {
                       <h3 className="font-semibold text-base text-gray-800 dark:text-gray-100 group-hover:text-primary transition-colors">{item.name}</h3>
                     </Link>
                     <Badge 
-                      variant={item.status === "Available" ? "outline" : "secondary"} 
-                      className={`text-xs whitespace-nowrap ${item.status === "Available" ? "border-green-500 bg-green-50 text-green-700 dark:bg-green-900/30 dark:border-green-700 dark:text-green-400" : "dark:bg-gray-700 dark:text-gray-300"}`}
+                      variant={statusStyles[item.status]?.variant || "secondary"}
+                      className={`text-xs whitespace-nowrap ${statusStyles[item.status]?.className || "dark:bg-gray-700 dark:text-gray-300"}`}
                     >
                       {item.status}
                     </Badge>
