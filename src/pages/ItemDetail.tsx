@@ -19,6 +19,7 @@ const ItemDetail = () => {
   const { id } = useParams();
   const dispatch = useDispatch<AppDispatch>();
   const { itemsById, loading } = useSelector((state: RootState) => state.items);
+  const { data } = useSelector((state: RootState) => state.user);
   const item = id ? itemsById[id] : undefined;
 
   useEffect(() => {
@@ -144,9 +145,19 @@ const ItemDetail = () => {
 
             {/* Request Form */}
             <BorrowRequestForm 
-              itemTitle={item.title} 
-              ownerName={ownerName} 
-              isAvailable={isAvailable} 
+              item={{
+                ...item, 
+                id: item?.id.toString(),
+                availability_status: item.availability_status as "AVAILABLE" | "BORROWED" | "BOOKED",
+                owner: {
+                  ...item?.owner,
+                  user: {
+                    ...item?.owner.user,
+                    id: item?.owner.user.id.toString()
+                  }
+                }
+              }}
+              currentUserId={data?.user?.id || ''}
             />
           </div>
         </div>
