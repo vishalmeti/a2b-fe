@@ -2,7 +2,7 @@
 
 > A modern peer-to-peer platform connecting borrowers and lenders in your community
 
-![Borrow Bundle Banner](./screenshots/banner.png)
+<!--![Borrow Bundle Banner](./screenshots/banner.png) -->
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://semver.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE.md)
@@ -48,8 +48,18 @@ A smooth entry into the Borrow Bundle community.
 Your personalized hub for discovering items around you.
 
 <div align="center">
-  <img src="./screenshots/home-page.png" width="70%" alt="Home Page">
+  <img src="./screenshots/home-page.png" width="90%" alt="Home Page">
   <p><em>Clean interface showcasing trending items and personalized recommendations</em></p>
+</div>
+
+### 👤 User Profile
+
+Your Borrow Bundle identity and history.
+
+<div align="center">
+  <img src="./screenshots/user-profile.png" width="90%" alt="User Profile">
+  <!-- <img src="./screenshots/edit-profile.png" width="45%" alt="Edit Profile">
+  <p><em>Professional profile showcasing reputation and transaction history</em></p> -->
 </div>
 
 ### 🔍 Discovering Items
@@ -57,9 +67,9 @@ Your personalized hub for discovering items around you.
 Multiple paths to find exactly what you need.
 
 <div align="center">
-  <img src="./screenshots/category-browser.png" width="45%" alt="Category Browser">
-  <img src="./screenshots/search-results.png" width="45%" alt="Search Results">
-  <p><em>Browse by categories or search with smart filters to narrow down options</em></p>
+  <img src="./screenshots/category-browser.png" width="90%" alt="Category Browser">
+  <!-- <img src="./screenshots/search-results.png" width="45%" alt="Search Results">
+  <p><em>Browse by categories or search with smart filters to narrow down options</em></p> -->
 </div>
 
 ### 📋 Item Details
@@ -67,7 +77,7 @@ Multiple paths to find exactly what you need.
 Comprehensive information to make borrowing decisions.
 
 <div align="center">
-  <img src="./screenshots/item-details.png" width="70%" alt="Item Details">
+  <img src="./screenshots/item-details.png" width="90%" alt="Item Details">
   <p><em>Detailed view with high-quality images, specifications, and availability calendar</em></p>
 </div>
 
@@ -87,19 +97,9 @@ A streamlined process from request to return.
 Share your items with the community effortlessly.
 
 <div align="center">
-  <img src="./screenshots/item-listing.png" width="45%" alt="Item Listing Form">
+  <img src="./screenshots/item-listing.png" width="90%" alt="Item Listing Form">
   <!-- <img src="./screenshots/manage-listings.png" width="45%" alt="Managing Listings">
   <p><em>Intuitive listing creation and management dashboard</em></p> -->
-</div>
-
-### 👤 User Profile
-
-Your Borrow Bundle identity and history.
-
-<div align="center">
-  <img src="./screenshots/user-profile.png" width="45%" alt="User Profile">
-  <!-- <img src="./screenshots/edit-profile.png" width="45%" alt="Edit Profile">
-  <p><em>Professional profile showcasing reputation and transaction history</em></p> -->
 </div>
 
 <!-- ### 💬 Messaging System
@@ -118,13 +118,13 @@ Borrow Bundle leverages cutting-edge technologies:
 
 | Layer | Technologies |
 |-------|-------------|
-| **Frontend** | React Native, Redux, Styled Components |
-| **Backend** | Node.js, Express, GraphQL |
-| **Database** | MongoDB with Mongoose |
+| **Frontend** | React , Redux, Styled Components, Tailwind Css |
+| **Backend** | Python, Django, AWS |
+| **Database** | Postgress, S3, Firebase, NeonDB |
 | **Authentication** | JWT, OAuth 2.0 |
-| **Real-time** | Socket.io |
+| **Real-time** | Firebase |
 | **Location** | Google Maps API |
-| **Payments** | Stripe |
+| **Payments** | Stripe (TBD) |
 | **CI/CD** | GitHub Actions |
 
 ## 🚀 Getting Started
@@ -133,7 +133,8 @@ Borrow Bundle leverages cutting-edge technologies:
 
 - Node.js v14+
 - npm or yarn
-- MongoDB
+- Python
+- Postgress
 
 ### Installation
 
