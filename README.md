@@ -31,9 +31,9 @@ Borrow Bundle revolutionizes how we access items we need only occasionally. Why 
 
 ## 🚶 App Journey
 
-### 🔐 Authentication & Onboarding
+<!-- ### 🔐 Authentication & Onboarding
 
-A smooth entry into the Borrow Bundle community.
+A smooth entry into the Borrow Bundle community. -->
 
 <!-- <div align="center">
   <img src="./screenshots/auth-screen.png" width="30%" alt="Authentication Screen">
