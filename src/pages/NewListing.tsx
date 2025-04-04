@@ -25,13 +25,14 @@ import { cn } from "@/lib/utils"; // Adjust path if needed
 
 import { apiService } from "@/services/apiService";
 import { ItemRepository } from "@/repositories/Item";
-import forEach from "lodash/forEach"; // Importing forEach from lodash
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import LoadingScreen from "@/components/loader/LoadingScreen"; // Import the LoadingScreen component
+import { useDispatch, useSelector } from "react-redux";
+import { fetchCategories } from "@/store/slices/itemsSlice";
+import { RootState } from "@/store/store";
 
 // --- Data Mappings & Constants ---
 // Replace with actual data fetching/logic
-
 
 // --- Types ---
 type FormData = {
@@ -101,6 +102,7 @@ const NewListingUltraModern = () => {
     useAuthRedirect();
     const navigate = useNavigate();
     const { toast } = useToast();
+    const dispatch = useDispatch();
     const [activeStep, setActiveStep] = useState(0);
     const [images, setImages] = useState<string[]>([]);
     const [imageFiles, setImageFiles] = useState<File[]>([]); // <-- Added state for image files
@@ -111,26 +113,18 @@ const NewListingUltraModern = () => {
         availability_notes: "",      // <-- Initialized field
     });
     const [formErrors, setFormErrors] = useState<FormErrors>({});
-    const [categoryMap, setcategoryMap] = useState({});
     const [isUploading, setIsUploading] = useState(false); // Add state for tracking upload status
+    
+    // Get categories from Redux store
+    const categoryMap = useSelector((state: RootState) => state.items.categories);
     const categoryList = Object.keys(categoryMap);
     const conditionList = [ { value: "NEW", label: "New" }, { value: "LIKE_NEW", label: "Like New" }, { value: "GOOD", label: "Good" }, { value: "FAIR", label: "Fair" }, { value: "POOR", label: "Poor" } ];
 
     useEffect(() => {
-        const fetchCategories = async () => {
-            const categoriesList = await apiService.get(ItemRepository.GET_CATEGORIES);
-            const map = {};
-            forEach(categoriesList?.data, (category:any) => {
-                map[category.name] = category.id;
-            });
-            console.log("Categories List:", categoriesList);
-            console.log("Category Map:", map);
-            setcategoryMap(map);
-        }
+        // Fetch categories from the Redux store
+        dispatch(fetchCategories() as any);
+    }, [dispatch]);
 
-        fetchCategories()
-
-    }, []);
     // --- Input Handlers ---
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;

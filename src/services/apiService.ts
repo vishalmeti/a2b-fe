@@ -24,6 +24,20 @@ export const apiService = {
     const response = await api.post(url, data, requestConfig);
     return response;
   },
+
+  patch: async <T>(url: string, data: T, config?: AxiosRequestConfig) => {
+    // Same FormData handling for PATCH requests
+    const requestConfig = config || {};
+
+    if (data instanceof FormData) {
+      requestConfig.headers = {
+        ...requestConfig.headers,
+        'Content-Type': 'multipart/form-data',
+      };
+    }
+    const response = await api.patch(url, data, requestConfig);
+    return response;
+  },
   
   put: async <T>(url: string, data: T, config?: AxiosRequestConfig) => {
     // Same FormData handling for PUT requests

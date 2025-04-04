@@ -1,7 +1,9 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { apiService } from '@/services/apiService';
+import { ItemRepository } from '@/repositories/Item';
 
 export interface ItemImage {
+  url: string;
   id: number;
   image_url: string;
   caption: string;
@@ -25,6 +27,8 @@ export interface ItemOwner {
 }
 
 export interface Item {
+  location: string;
+  price: number | string;
   id: number;
   title: string;
   description: string;
@@ -49,13 +53,28 @@ export interface Item {
   updated_at: string;
 }
 
+export interface Category {
+  id: number;
+  name: string;
+  icon: string | null;
+}
+
 export interface ItemsState {
   itemsById: Record<string, Item>;
   allIds: number[];
   myItemIds: number[];
+  categories: Record<string, number>; // Map of category name to id
   loading: boolean;
   error: string | null;
 }
+
+export const fetchCategories = createAsyncThunk(
+  'items/fetchCategories',
+  async () => {
+    const response = await apiService.get(ItemRepository.GET_CATEGORIES);
+    return response.data;
+  }
+);
 
 export const fetchItemById = createAsyncThunk(
   'items/fetchById',
@@ -64,7 +83,6 @@ export const fetchItemById = createAsyncThunk(
     return response.data;
   }
 );
-
 
 export const fetchAllItems = createAsyncThunk(
   'items/fetchAll',
@@ -84,12 +102,30 @@ export const fetchMyItems = createAsyncThunk(
   }
 );
 
+export const updateItemData = createAsyncThunk(
+  'items/updateItemData',
+  async (item: Item) => {
+    const { id , ...itemData } = item;
+    const response = await apiService.patch(`/items/${id}/`, itemData);
+    return response.data;
+  }
+);
+
+export const deleteItem = createAsyncThunk(
+  'items/deleteItem',
+  async (itemId: number) => {
+    const response = await apiService.delete(`/items/${itemId}/`);
+    return response.data;
+  }
+);
+
 const itemsSlice = createSlice({
   name: 'items',
   initialState: {
     itemsById: {},
     allIds: [],
     myItemIds: [],
+    categories: {}, // Added categories to initial state
     loading: false,
     error: null,
   } as ItemsState,
@@ -167,6 +203,26 @@ const itemsSlice = createSlice({
         state.error = action.error.message || 'Failed to fetch items';
       }
       );
+
+      // Add the categories fetch cases
+      builder
+      .addCase(fetchCategories.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchCategories.fulfilled, (state, action) => {
+        state.loading = false;
+        // Create a map of category names to ids
+        const categoryMap: Record<string, number> = {};
+        action.payload.forEach((category: Category) => {
+          categoryMap[category.name] = category.id;
+        });
+        state.categories = categoryMap;
+      })
+      .addCase(fetchCategories.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to fetch categories';
+      });
   },
 });
 

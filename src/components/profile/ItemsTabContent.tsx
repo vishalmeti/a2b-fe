@@ -8,6 +8,7 @@ import { PlusCircle, Pencil, Package, Loader2 } from "lucide-react";
 import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '@/store/store';
 import { fetchMyItems, type Item as StoreItem } from '@/store/slices/itemsSlice';
+import { EditItemModal } from "./EditItemModal";
 
 interface Item {
   id: string;
@@ -19,7 +20,9 @@ interface Item {
 
 export const ItemsTabContent: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
-  const { data } = useSelector((state: RootState) => state.user);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<StoreItem | null>(null);
+  const { data, loading } = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch<AppDispatch>();
   const { myItemIds, itemsById } = useSelector((state: RootState) => state.items);
   
@@ -45,28 +48,28 @@ export const ItemsTabContent: React.FC = () => {
       });
   }, [dispatch]);
 
-  // if (loading) {
-  //   return (
-  //     <Card className="shadow-sm dark:bg-gray-800/50 border-gray-200 dark:border-gray-700/60">
-  //       <CardContent className="text-center py-16">
-  //         <Loader2 className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4 animate-spin" />
-  //         <p className="text-gray-500 dark:text-gray-400">Loading items...</p>
-  //       </CardContent>
-  //     </Card>
-  //   );
-  // }
+  const handleEditClick = (itemId: string) => {
+    const originalItem = itemsById[itemId];
+    setSelectedItem(originalItem);
+    setIsEditModalOpen(true);
+  };
 
-  // if (error) {
-  //   return (
-  //     <Card className="shadow-sm dark:bg-gray-800/50 border-gray-200 dark:border-gray-700/60">
-  //       <CardContent className="text-center py-16">
-  //         <h3 className="text-lg font-semibold text-red-600 dark:text-red-400">Error loading items</h3>
-  //         <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 mb-4">{error}</p>
-  //         <Button onClick={() => dispatch(fetchMyItems())}>Try Again</Button>
-  //       </CardContent>
-  //     </Card>
-  //   );
-  // }
+  const handleCloseModal = () => {
+    setIsEditModalOpen(false);
+    setSelectedItem(null);
+  };
+
+  if (error) {
+    return (
+      <Card className="shadow-sm dark:bg-gray-800/50 border-gray-200 dark:border-gray-700/60">
+        <CardContent className="text-center py-16">
+          <h3 className="text-lg font-semibold text-red-600 dark:text-red-400">Error loading items</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 mb-4">{error}</p>
+          <Button onClick={() => dispatch(fetchMyItems())}>Try Again</Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <>      
@@ -95,7 +98,12 @@ export const ItemsTabContent: React.FC = () => {
                   <p className="text-xs text-gray-500 dark:text-gray-400">{item.category}</p>
                 </div>
                 <div className="flex space-x-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/60">
-                  <Button variant="ghost" size="sm" className="flex-1 h-8 text-xs text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="flex-1 h-8 text-xs text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                    onClick={() => handleEditClick(item.id)}
+                  >
                     <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
                   </Button>
                   <Button variant="ghost" size="sm" className="flex-1 h-8 text-xs text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
@@ -115,6 +123,14 @@ export const ItemsTabContent: React.FC = () => {
             <Link to="/new-listing"><Button>Add Your First Item</Button></Link>
           </CardContent>
         </Card>
+      )}
+
+      {selectedItem && (
+        <EditItemModal 
+          isOpen={isEditModalOpen} 
+          onClose={handleCloseModal} 
+          item={selectedItem} 
+        />
       )}
     </>
   );
