@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Item, fetchCategories, updateItemData } from '@/store/slices/itemsSlice';
 import { X, Loader2, Upload, Camera } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { useToast } from '@/hooks/use-toast';
 
 interface EditItemModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ interface EditItemModalProps {
 
 export const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, item }) => {
   const dispatch = useDispatch<AppDispatch>();
+  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const categories = useSelector((state: RootState) => state.items.categories);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -160,15 +162,29 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, i
         max_borrow_duration_days: Number(safeFormData.max_borrow_duration_days),
         pickup_details: safeFormData.pickup_details,
         is_active: formData.is_active,
-        
       };
 
       // Dispatch the update action
       await dispatch(updateItemData(updatedItem)).unwrap();
+      
+      // Show success toast
+      toast({
+        title: "Success",
+        description: "Item updated successfully",
+        variant: "success",
+      });
+      
       console.log('Item updated successfully');
       onClose();
     } catch (error) {
       console.error('Failed to update item:', error);
+      
+      // Show error toast
+      toast({
+        title: "Error",
+        description: "Failed to update item. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
