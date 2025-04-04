@@ -104,9 +104,11 @@ export const fetchMyItems = createAsyncThunk(
 
 export const updateItemData = createAsyncThunk(
   'items/updateItemData',
-  async (item: Item) => {
+  async (item: Item, { getState }) => {
+    const state = getState() as { user: { data?: { user?: { id?: number } } } };
+    const userId = state.user.data?.user?.id;
     const { id , ...itemData } = item;
-    const response = await apiService.patch(`/items/${id}/`, itemData);
+    const response = await apiService.patch(`/items/${id}/?user_id=${userId}`, itemData);
     return response.data;
   }
 );
@@ -223,6 +225,26 @@ const itemsSlice = createSlice({
         state.loading = false;
         state.error = action.error.message || 'Failed to fetch categories';
       });
+      // Update item data
+      builder
+      .addCase(updateItemData.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateItemData.fulfilled, (state, action) => {
+        state.loading = false;
+        const listOfImages: ItemImage[] = [];
+        for (let i = 0; i < action.payload.images.length; i++) {
+          const image = action.payload.images[i];
+          listOfImages.push(image.image_url);
+        }
+        const updatedItem = action.payload;
+        state.itemsById[updatedItem.id] = {
+          ...state.itemsById[updatedItem.id],
+          ...updatedItem,
+          images: listOfImages
+        };
+      })
   },
 });
 

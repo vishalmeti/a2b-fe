@@ -26,6 +26,13 @@ export const ItemsTabContent: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { myItemIds, itemsById } = useSelector((state: RootState) => state.items);
   
+  const StatusMapper = {
+    AVAILABLE: 'Available',
+    RENTED: 'Rented',
+    BOOKED: 'Booked',
+    UNAVAILABLE: 'Unavailable'
+  };
+
   // Transform store items to component's item format
   const items: Item[] = myItemIds.map(id => {
     const item = itemsById[id];
@@ -34,7 +41,7 @@ export const ItemsTabContent: React.FC = () => {
       name: item.title,
       image: typeof item.images?.[0] === 'string' ? item.images[0] : 'https://placehold.co/600x400?text=No+Image',
       category: item.category?.name || 'Uncategorized',
-      status: item.availability_status === 'AVAILABLE' ? 'Available' : 'Rented'
+      status: item.availability_status ? StatusMapper[item.availability_status] : 'Unknown'
     };
   });
 

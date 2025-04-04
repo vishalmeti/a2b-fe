@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/store/store';
@@ -8,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Item, fetchCategories } from '@/store/slices/itemsSlice';
+import { Item, fetchCategories, updateItemData } from '@/store/slices/itemsSlice';
 import { X, Loader2, Upload, Camera } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 
@@ -24,6 +25,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, i
   const categories = useSelector((state: RootState) => state.items.categories);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<{
+    is_active: any;
     title: string;
     description: string;
     category: string;
@@ -63,6 +65,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, i
         pickup_details: item.pickup_details || '',
         max_borrow_duration_days: item.max_borrow_duration_days?.toString() || '',
         availability_notes: item.availability_notes || '',
+        is_active: item.is_active,
       };
       
       console.log('Setting form data to:', newFormData);
@@ -92,6 +95,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, i
         pickup_details: item.pickup_details || '',
         max_borrow_duration_days: item.max_borrow_duration_days?.toString() || '',
         availability_notes: item.availability_notes || '',
+        is_active: item.is_active,
       });
     }
   }, [formData, item]);
@@ -116,6 +120,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, i
     pickup_details: '',
     max_borrow_duration_days: '',
     availability_notes: '',
+    is_active: false,
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -124,13 +129,16 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, i
   };
 
   const handleSelectChange = (name: string, value: string) => {
+    // Skip updating if the value is our loading placeholder
+    if (value === "loading") return;
+    
     setFormData(prev => prev ? { ...prev, [name]: value } : null);
   };
 
   const handleSwitchChange = (checked: boolean) => {
     setFormData(prev => prev ? {
       ...prev,
-      availability_status: checked ? 'AVAILABLE' : 'UNAVAILABLE',
+      is_active: checked,
     } : null);
   };
 
@@ -139,7 +147,25 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, i
     setIsSubmitting(true);
     
     try {
-      console.log('Updated item:', { id: item.id, ...safeFormData });
+      // Prepare the updated item data matching the Item interface
+      const updatedItem: any = {
+        id: item.id,
+        title: safeFormData.title,
+        description: safeFormData.description,
+        category_id: safeFormData.category,
+        condition: safeFormData.condition,
+        availability_notes: safeFormData.availability_notes,
+        deposit_amount: safeFormData.deposit_amount,
+        borrowing_fee: safeFormData.borrowing_fee,
+        max_borrow_duration_days: Number(safeFormData.max_borrow_duration_days),
+        pickup_details: safeFormData.pickup_details,
+        is_active: formData.is_active,
+        
+      };
+
+      // Dispatch the update action
+      await dispatch(updateItemData(updatedItem)).unwrap();
+      console.log('Item updated successfully');
       onClose();
     } catch (error) {
       console.error('Failed to update item:', error);
@@ -257,7 +283,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, i
                           </SelectItem>
                         ))}
                         {Object.keys(categories).length === 0 && (
-                          <SelectItem value="" disabled>
+                          <SelectItem value="loading" disabled>
                             Loading categories...
                           </SelectItem>
                         )}
@@ -288,7 +314,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, i
                 <div className="flex items-center space-x-2 pt-2">
                   <Switch 
                     id="availability" 
-                    checked={safeFormData.availability_status === 'AVAILABLE'}
+                    checked={safeFormData.is_active}
                     onCheckedChange={handleSwitchChange}
                   />
                   <Label htmlFor="availability" className="cursor-pointer">
