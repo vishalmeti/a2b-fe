@@ -362,7 +362,9 @@ const Browse = () => {
                 </Select>
               </div>
 
-              {renderContent()}
+                <div className="h-[calc(100vh-400px)] overflow-y-auto px-4 rounded-md">
+                  {renderContent()}
+                </div>
             </div>
           </div>
         </div>
