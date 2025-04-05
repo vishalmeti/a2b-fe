@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
-import { Calendar as CalendarIcon, Info, AlertCircle } from "lucide-react";
+import { Calendar as CalendarIcon, Info, AlertCircle, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +16,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useDispatch } from "react-redux";
+import { requestItem } from "@/store/slices/itemsSlice";
 
 // Define the item interface
 interface Item {
@@ -42,9 +45,12 @@ export const BorrowRequestForm = ({
   item,
   currentUserId
 }: BorrowRequestFormProps) => {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const dispatch = useDispatch();
   
   // Extract necessary data from the item object
   const itemTitle = item.title;
@@ -58,14 +64,31 @@ export const BorrowRequestForm = ({
   const isAlreadyBorrowed = itemStatus === 'BORROWED';
   const isDisabled = isOwner || !isAvailable || isAlreadyBooked || isAlreadyBorrowed;
 
-  const handleBorrowRequest = () => {
-    if (!selectedDate) {
+  const handleBorrowRequest = async () => {
+    if (!startDate) {
       toast({
         variant: "destructive",
-        title: "Please select a date",
-        description: "Select when you want to borrow this item.",
+        title: "Please select a start date",
+        description: "Select when you want to start borrowing this item.",
       });
-      console.log(currentUserId,ownerId,isOwner);
+      return;
+    }
+
+    if (!endDate) {
+      toast({
+        variant: "destructive",
+        title: "Please select an end date",
+        description: "Select when you plan to return this item.",
+      });
+      return;
+    }
+
+    if (endDate < startDate) {
+      toast({
+        variant: "destructive",
+        title: "Invalid date range",
+        description: "The end date must be after the start date.",
+      });
       return;
     }
 
@@ -78,11 +101,44 @@ export const BorrowRequestForm = ({
       return;
     }
 
-    toast({
-      title: "Request sent!",
-      description: `Your request to borrow ${itemTitle} has been sent to ${ownerName}.`,
-      variant: "success",
-    });
+    try {
+      setIsSubmitting(true);
+      
+      // Format dates as YYYY-MM-DD
+      const formattedStartDate = format(startDate, "yyyy-MM-dd");
+      const formattedEndDate = format(endDate, "yyyy-MM-dd");
+      
+      // Create the request payload
+      const requestData = {
+        item: Number(item.id),
+        start_date: formattedStartDate,
+        end_date: formattedEndDate,
+        borrower_message: message
+      };
+      
+      // Dispatch the requestItem action
+      await dispatch(requestItem(requestData) as any);
+      
+      toast({
+        title: "Request sent!",
+        description: `Your request to borrow ${itemTitle} from ${format(startDate, "PPP")} to ${format(endDate, "PPP")} has been sent to ${ownerName}.`,
+        variant: "success",
+      });
+      
+      // Reset form after successful submission
+      setStartDate(undefined);
+      setEndDate(undefined);
+      setMessage("");
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error sending request",
+        description: "There was an error sending your borrow request. Please try again later.",
+      });
+      console.error("Error sending borrow request:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Helper function to get status message
@@ -114,7 +170,7 @@ export const BorrowRequestForm = ({
       <CardHeader>
         <CardTitle className="text-lg">Request to Borrow</CardTitle>
         <CardDescription>
-          Select a date and send a message to the owner
+          Select borrowing dates and send a message to the owner
         </CardDescription>
       </CardHeader>
       
@@ -135,35 +191,75 @@ export const BorrowRequestForm = ({
       <CardContent className={`space-y-4 ${isDisabled ? 'opacity-50' : ''}`}>
         <div className="space-y-2">
           <label className="text-sm font-medium">
-            When do you need it?
+            Borrowing period
           </label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full justify-start text-left font-normal"
-                disabled={isDisabled}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {selectedDate ? (
-                  format(selectedDate, "PPP")
-                ) : (
-                  <span>Select a date</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={setSelectedDate}
-                initialFocus
-                disabled={(date) => 
-                  date < new Date(new Date().setHours(0, 0, 0, 0))
-                }
-              />
-            </PopoverContent>
-          </Popover>
+          <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
+            <div className="w-full">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start text-left font-normal"
+                    disabled={isDisabled}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {startDate ? (
+                      format(startDate, "PPP")
+                    ) : (
+                      <span>Start date</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={startDate}
+                    onSelect={(date) => {
+                      setStartDate(date);
+                      // If end date is before new start date, reset it
+                      if (endDate && date && endDate < date) {
+                        setEndDate(undefined);
+                      }
+                    }}
+                    initialFocus
+                    disabled={(date) => 
+                      date < new Date(new Date().setHours(0, 0, 0, 0))
+                    }
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            
+            <div className="w-full">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start text-left font-normal"
+                    disabled={isDisabled || !startDate}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {endDate ? (
+                      format(endDate, "PPP")
+                    ) : (
+                      <span>End date</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="center">
+                  <Calendar
+                    mode="single"
+                    selected={endDate}
+                    onSelect={setEndDate}
+                    initialFocus
+                    disabled={(date) => 
+                      !startDate || date < startDate
+                    }
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
         </div>
 
         <div className="space-y-2">
@@ -190,12 +286,17 @@ export const BorrowRequestForm = ({
         <Button 
           className="w-full" 
           onClick={handleBorrowRequest}
-          disabled={isDisabled}
+          disabled={isDisabled || isSubmitting}
         >
-          {isOwner ? "You own this item" : 
-           isAlreadyBorrowed ? "Currently Borrowed" :
-           isAlreadyBooked ? "Already Booked" : 
-           "Send Request"}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Sending Request...
+            </>
+          ) : isOwner ? "You own this item" : 
+             isAlreadyBorrowed ? "Currently Borrowed" :
+             isAlreadyBooked ? "Already Booked" : 
+             "Send Request"}
         </Button>
       </CardFooter>
     </Card>
