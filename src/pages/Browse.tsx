@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -26,6 +26,7 @@ import {
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import type { RootState } from '@/store/store';
 import SkeletonLoader from "@/components/items/SkeletonLoader";
+import ItemCard from "@/components/items/ItemCard";
 
 import { fetchAllItems, Item } from "@/store/slices/itemsSlice";
 
@@ -145,49 +146,16 @@ const Browse = () => {
   const GridView = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {filteredItems.map((item) => (
-        <Link to={`/items/${item.id}`} key={item.id}>
-          <Card className="h-full overflow-hidden transition-shadow hover:shadow-md">
-            <div className="aspect-video w-full overflow-hidden">
-              <img
-                src={item.image}
-                alt={item.name}
-                className="h-full w-full object-cover transition-transform hover:scale-105"
-              />
-            </div>
-            <CardHeader className="p-4">
-              <div className="flex items-center justify-between">
-                <Badge variant="outline" className="bg-brand-neutral-lightest">
-                  {item.category}
-                </Badge>
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <MapPin className="mr-1 h-3 w-3" />
-                  {item.distance}
-                </div>
-              </div>
-              <CardTitle className="text-lg">{item.name}</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <p className="text-sm text-muted-foreground line-clamp-2">
-                {item.description}
-              </p>
-            </CardContent>
-            <CardFooter className="p-4 pt-0">
-              <div className="flex items-center space-x-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={item.owner.avatar} alt={item.owner.name} />
-                  <AvatarFallback>{item.owner.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div className="text-sm">
-                  <p className="font-medium">{item.owner.name}</p>
-                  <div className="flex items-center">
-                    <span className="text-yellow-500">★</span>
-                    <span className="ml-1">{item.owner.rating}</span>
-                  </div>
-                </div>
-              </div>
-            </CardFooter>
-          </Card>
-        </Link>
+        <ItemCard
+          key={item.id}
+          id={item.id}
+          name={item.name}
+          description={item.description}
+          image={item.image}
+          category={item.category}
+          distance={item.distance}
+          owner={item.owner}
+        />
       ))}
     </div>
   );

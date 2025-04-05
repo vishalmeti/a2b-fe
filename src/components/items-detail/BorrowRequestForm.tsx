@@ -81,6 +81,7 @@ export const BorrowRequestForm = ({
     toast({
       title: "Request sent!",
       description: `Your request to borrow ${itemTitle} has been sent to ${ownerName}.`,
+      variant: "success",
     });
   };
 
