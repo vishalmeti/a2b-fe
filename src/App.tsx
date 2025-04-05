@@ -13,6 +13,7 @@ import Profile from "./pages/Profile";
 import NewListing from "./pages/NewListing";
 import NotFound from "./pages/NotFound";
 import CommunityBrowser  from "./pages/Communities";
+import RequestsReceived from "./pages/RequestsReceived";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/profile/:id" element={<Profile />} />
             <Route path="/new-listing" element={<NewListing />} />
             <Route path="/communities" element={<CommunityBrowser/>} />
+            <Route path="/requests-received" element={<RequestsReceived/>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

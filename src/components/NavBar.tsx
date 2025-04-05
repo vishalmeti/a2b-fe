@@ -9,7 +9,7 @@ import {
 import { AvatarPopover } from "@/components/modals/AvatarPopover";
 import { 
   Menu, Search, PlusCircle, Bell, User as UserIcon, 
-  LogIn, Home, Package, Map, Settings
+  LogIn, Home, Package, Map, Settings, ClipboardList
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -30,6 +30,7 @@ const NavBar = () => {
     { name: "Home", path: "/", icon: <Home className="mr-2 h-4 w-4" /> },
     { name: "Browse Items", path: "/browse", icon: <Search className="mr-2 h-4 w-4" /> },
     { name: "Communities", path: "/communities", icon: <Map className="mr-2 h-4 w-4" /> },
+    { name: "Requests", path: "/requests-received", icon: <ClipboardList className="mr-2 h-4 w-4" /> },
   ];
 
   const authItems = [
