@@ -184,13 +184,7 @@ const RequestsReceivedRedesign = () => {
                 setIsMobileFiltersOpen(false); // Close sheet on selection
             }}
           >
-            <Icon className={`h-4 w-4 mr-2.5 ${
-                filter === 'PENDING' && isActive ? 'text-amber-600 dark:text-amber-400' :
-                filter === 'APPROVED' && isActive ? 'text-emerald-600 dark:text-emerald-400' :
-                filter === 'COMPLETED' && isActive ? 'text-blue-600 dark:text-blue-400' :
-                filter === 'other' && isActive ? 'text-rose-600 dark:text-rose-400' :
-                ''
-            }`} />
+            <Icon className="h-4 w-4 mr-2.5" />
             <span>{label}</span>
             {count > 0 && <Badge variant={isActive ? "default" : "secondary"} className="ml-auto text-xs">{count}</Badge>}
           </Button>
@@ -282,30 +276,30 @@ const RequestsReceivedRedesign = () => {
 
             {/* Quick Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                <Card className="bg-card">
+                <Card>
                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">Pending Actions</CardTitle>
-                      <Hand className="h-4 w-4 text-amber-500" />
+                      <Hand className="h-4 w-4 text-muted-foreground" />
                    </CardHeader>
                    <CardContent>
                       <div className="text-2xl font-bold">{counts.PENDING}</div>
                       <p className="text-xs text-muted-foreground">Requests awaiting your response</p>
                    </CardContent>
                 </Card>
-                <Card className="bg-card">
+                <Card>
                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">Approved & Upcoming</CardTitle>
-                      <CheckCircle className="h-4 w-4 text-emerald-500" />
+                      <CheckCircle className="h-4 w-4 text-muted-foreground" />
                    </CardHeader>
                    <CardContent>
                       <div className="text-2xl font-bold">{counts.APPROVED}</div>
                        <p className="text-xs text-muted-foreground">Current or upcoming borrows</p>
                    </CardContent>
                 </Card>
-                 <Card className="bg-card hidden lg:block">
+                 <Card className="hidden lg:block">
                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">Total Requests</CardTitle>
-                      <Inbox className="h-4 w-4 text-blue-500" />
+                      <Inbox className="h-4 w-4 text-muted-foreground" />
                    </CardHeader>
                    <CardContent>
                       <div className="text-2xl font-bold">{counts.all}</div>
@@ -362,124 +356,108 @@ interface RequestCardProps {
 }
 
 const RequestCard: React.FC<RequestCardProps> = ({ request, onApprove, onDecline, onMessage, navigate }) => {
-
-  const statusStyles = {
-    PENDING: "border-amber-500 bg-amber-50 dark:bg-amber-900/20",
-    APPROVED: "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20",
-    COMPLETED: "border-blue-500 bg-blue-50 dark:bg-blue-900/20",
-    DECLINED: "border-rose-500 bg-rose-50 dark:bg-rose-900/20",
-    CANCELLED: "border-slate-500 bg-slate-50 dark:bg-slate-800/20",
-  };
-
-  const statusTextStyles = {
-      PENDING: "text-amber-700 dark:text-amber-400",
-      APPROVED: "text-emerald-700 dark:text-emerald-400",
-      COMPLETED: "text-blue-700 dark:text-blue-400",
-      DECLINED: "text-rose-700 dark:text-rose-400",
-      CANCELLED: "text-slate-700 dark:text-slate-400",
-  }
-
   const statusIcon = {
-    PENDING: <Clock className="h-3.5 w-3.5 mr-1" />,
-    APPROVED: <CheckCircle className="h-3.5 w-3.5 mr-1" />,
-    COMPLETED: <Check className="h-3.5 w-3.5 mr-1" />,
-    DECLINED: <X className="h-3.5 w-3.5 mr-1" />,
-    CANCELLED: <AlertCircle className="h-3.5 w-3.5 mr-1" />,
+    PENDING: <Clock className="h-3.5 w-3.5 mr-1.5" />,
+    APPROVED: <CheckCircle className="h-3.5 w-3.5 mr-1.5" />,
+    COMPLETED: <Check className="h-3.5 w-3.5 mr-1.5" />,
+    DECLINED: <X className="h-3.5 w-3.5 mr-1.5" />,
+    CANCELLED: <AlertCircle className="h-3.5 w-3.5 mr-1.5" />,
   }
 
   return (
-    <Card className={`overflow-hidden transition-shadow duration-200 hover:shadow-lg dark:border-gray-800 border-l-4 ${statusStyles[request.status] ?? 'border-border'} ${request.isNew && request.status === 'PENDING' ? 'border-primary' : statusStyles[request.status] ?? 'border-border'}`}>
+    <Card className="transition-shadow hover:shadow-md">
       <CardContent className="p-0">
-        <div className="flex flex-col sm:flex-row">
-          {/* Image */}
-          <div className="flex-shrink-0 w-full sm:w-32 h-32 sm:h-auto bg-muted overflow-hidden">
-            <Link to={`/item/${request.item.id}`}>
-               <img src={request.item.image} alt={request.item.title} className="h-full w-full object-cover"/>
-            </Link>
-          </div>
-
-          {/* Details */}
-          <div className="flex-1 p-4 md:p-5 flex flex-col justify-between">
-            <div> {/* Top section for details */}
-                <div className="flex justify-between items-start mb-2 gap-2">
-                   {/* Item Title & Category */}
-                   <div className="flex-1 mr-2">
-                       <Link to={`/item/${request.item.id}`} className="block">
-                         <h3 className="text-base sm:text-lg font-semibold hover:text-primary transition-colors line-clamp-2 leading-tight">
-                           {request.item.title}
-                         </h3>
-                       </Link>
-                       <p className="text-xs text-muted-foreground mt-0.5">{request.item.category}</p>
-                   </div>
-                    {/* Status Badge */}
-                     <Badge variant="outline" className={`capitalize text-xs shrink-0 h-6 ${statusTextStyles[request.status] ?? ''}`}>
-                        {statusIcon[request.status]} {request.status.toLowerCase()}
-                     </Badge>
-                </div>
-
-               {/* Borrower Info */}
-               <Link to={`/profile/${request.borrower.id}`} className="flex items-center gap-2 group mb-3 text-sm">
-                 <Avatar className="h-6 w-6">
-                   <AvatarImage src={request.borrower.avatar} />
-                   <AvatarFallback>{request.borrower.name.charAt(0)}</AvatarFallback>
-                 </Avatar>
-                 <span className="font-medium group-hover:text-primary transition-colors">{request.borrower.name}</span>
-                 <span className="text-muted-foreground flex items-center">
-                     <Star className="h-3 w-3 mr-0.5 fill-yellow-400 text-yellow-500" /> {request.borrower.rating.toFixed(1)}
-                     <span className="mx-1">•</span> {request.borrower.borrowCount} borrows
-                 </span>
-               </Link>
-
-                {/* Dates */}
-               <div className="flex items-center gap-1 text-xs text-muted-foreground mb-3">
-                 <CalendarRange className="h-3.5 w-3.5"/>
-                 <span>{formatDate(request.startDate)}</span>
-                 <span>-</span>
-                 <span>{formatDate(request.endDate)}</span>
-                 <span className="mx-1">•</span>
-                 <span>Requested {timeAgo(request.requestDate)}</span>
-               </div>
-
-               {/* Message */}
-               <p className="text-sm line-clamp-3 mb-4 text-foreground/90">{request.message}</p>
+        <div className="p-4 md:p-5">
+          {/* Status Badge - Top right */}
+          <div className="flex justify-between items-start mb-4">
+            <div className="flex items-center space-x-2">
+              {request.isNew && request.status === "PENDING" && (
+                <Badge className="rounded-full px-1.5 h-5 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">New</Badge>
+              )}
+              <Badge variant={request.status === "PENDING" ? "default" : "outline"} className="capitalize">
+                {statusIcon[request.status]} {request.status.toLowerCase()}
+              </Badge>
             </div>
 
-            {/* Actions */}
-             <Separator className="my-3 md:my-4"/>
-             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                 {/* Action Buttons */}
-                 <div className="flex items-center gap-2 flex-wrap">
-                     {request.status === 'PENDING' && (
-                       <>
-                         <Button size="sm" variant="outline" onClick={() => onDecline(request.id)}>
-                            <XCircle className="h-4 w-4 mr-1.5"/> Decline
-                         </Button>
-                          <Button size="sm" onClick={() => onApprove(request.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                             <CheckCircle className="h-4 w-4 mr-1.5"/> Approve
-                          </Button>
-                       </>
-                     )}
-                      <Button size="sm" variant="outline" onClick={() => onMessage(request.borrower.id, request.id)}>
-                         <MessageCircle className="h-4 w-4 mr-1.5"/> Message
-                      </Button>
-                 </div>
+            {/* More Options Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreVertical className="h-4 w-4" />
+                  <span className="sr-only">More options</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => navigate(`/item/${request.item.id}`)}>View Item</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate(`/profile/${request.borrower.id}`)}>View Profile</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem disabled>Report</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
 
-                 {/* More Options Dropdown */}
-                 <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                       <Button variant="ghost" size="icon" className="h-8 w-8 self-end sm:self-center">
-                          <MoreVertical className="h-4 w-4"/>
-                          <span className="sr-only">More options</span>
-                       </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                       <DropdownMenuItem onClick={() => navigate(`/item/${request.item.id}`)}>View Item</DropdownMenuItem>
-                       <DropdownMenuItem onClick={() => navigate(`/profile/${request.borrower.id}`)}>View Profile</DropdownMenuItem>
-                       <DropdownMenuSeparator/>
-                       <DropdownMenuItem disabled>Report</DropdownMenuItem>
-                    </DropdownMenuContent>
-                 </DropdownMenu>
-             </div>
+          {/* Item & Borrower Info */}
+          <div className="flex gap-4">
+            {/* Item Image */}
+            <div className="flex-shrink-0 w-20 h-20 rounded-md overflow-hidden bg-muted">
+              <Link to={`/item/${request.item.id}`}>
+                <img src={request.item.image} alt={request.item.title} className="w-full h-full object-cover" />
+              </Link>
+            </div>
+
+            <div className="flex-1 min-w-0">
+              {/* Item Title & Category */}
+              <Link to={`/item/${request.item.id}`} className="block">
+                <h3 className="font-medium text-lg mb-0.5 line-clamp-1 hover:text-primary transition-colors">
+                  {request.item.title}
+                </h3>
+              </Link>
+              <p className="text-xs text-muted-foreground mb-2">{request.item.category}</p>
+
+              {/* Borrower Info */}
+              <Link to={`/profile/${request.borrower.id}`} className="flex items-center gap-2 group mb-2">
+                <Avatar className="h-6 w-6">
+                  <AvatarImage src={request.borrower.avatar} />
+                  <AvatarFallback>{request.borrower.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <span className="text-sm font-medium group-hover:text-primary transition-colors">{request.borrower.name}</span>
+                <div className="flex items-center text-xs text-muted-foreground">
+                  <Star className="h-3 w-3 mr-0.5" /> {request.borrower.rating.toFixed(1)}
+                </div>
+              </Link>
+
+              {/* Dates */}
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <CalendarRange className="h-3.5 w-3.5" />
+                <span>{formatDate(request.startDate)}</span>
+                <span>-</span>
+                <span>{formatDate(request.endDate)}</span>
+                <span className="mx-1">•</span>
+                <span>Requested {timeAgo(request.requestDate)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Message */}
+          <div className="mt-4 p-3 rounded-md bg-muted/40 text-sm">
+            <p className="line-clamp-2">{request.message}</p>
+          </div>
+
+          {/* Actions */}
+          <div className="mt-4 flex flex-wrap items-center gap-2 justify-end">
+            {request.status === 'PENDING' && (
+              <>
+                <Button size="sm" variant="outline" onClick={() => onDecline(request.id)}>
+                  <XCircle className="h-4 w-4 mr-1.5" /> Decline
+                </Button>
+                <Button size="sm" variant="default" onClick={() => onApprove(request.id)}>
+                  <CheckCircle className="h-4 w-4 mr-1.5" /> Approve
+                </Button>
+              </>
+            )}
+            <Button size="sm" variant="outline" onClick={() => onMessage(request.borrower.id, request.id)}>
+              <MessageCircle className="h-4 w-4 mr-1.5" /> Message
+            </Button>
           </div>
         </div>
       </CardContent>
