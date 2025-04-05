@@ -158,6 +158,7 @@ const ItemDetail = () => {
                 }
               }}
               currentUserId={data?.user?.id || ''}
+              maxBorrowDurationDays={item.max_borrow_duration_days}
             />
           </div>
         </div>

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { Calendar as CalendarIcon, Info, AlertCircle, Loader2 } from "lucide-react";
-import { format } from "date-fns";
+import { format, differenceInDays } from "date-fns";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -39,11 +39,13 @@ interface Item {
 interface BorrowRequestFormProps {
   item: Item;
   currentUserId: string;
+  maxBorrowDurationDays?: number;
 }
 
 export const BorrowRequestForm = ({ 
   item,
-  currentUserId
+  currentUserId,
+  maxBorrowDurationDays
 }: BorrowRequestFormProps) => {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
@@ -90,6 +92,19 @@ export const BorrowRequestForm = ({
         description: "The end date must be after the start date.",
       });
       return;
+    }
+
+    // Check if the borrowing duration exceeds the maximum allowed days
+    if (maxBorrowDurationDays) {
+      const durationDays = differenceInDays(endDate, startDate) + 1; // +1 to include both start and end days
+      if (durationDays > maxBorrowDurationDays) {
+        toast({
+          variant: "destructive",
+          title: "Borrowing duration too long",
+          description: `The maximum borrowing period for this item is ${maxBorrowDurationDays} day${maxBorrowDurationDays > 1 ? 's' : ''}.`,
+        });
+        return;
+      }
     }
 
     if (!message.trim()) {
