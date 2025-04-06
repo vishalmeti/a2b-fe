@@ -15,6 +15,7 @@ const LoginPage = lazy(() => import("@/pages/Auth"));
 const RegisterPage = lazy(() => import("@/pages/Auth"));
 const NotFoundPage = lazy(() => import("@/pages/NotFound"));
 const ItemDetailsPage = lazy(() => import("@/pages/ItemDetail"));
+const RequestTrackingPage = lazy(() => import("@/pages/RequestTrackingPage"));
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -88,6 +89,11 @@ const AppRoutes = () => {
             <Route path="/new-listing" element={
               <ProtectedRoute>
                 <NewListingPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/requests/:requestId/tracking" element={
+              <ProtectedRoute>
+                <RequestTrackingPage />
               </ProtectedRoute>
             } />
             

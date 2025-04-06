@@ -6,7 +6,8 @@ import {
   fetchMyItems, 
   fetchCategories, 
   updateItemData, 
-  deleteItem 
+  deleteItem,
+  fetchRequestById
 } from './thunks';
 
 export const buildItemsReducers = (builder: ActionReducerMapBuilder<ItemsState>) => {
@@ -143,4 +144,26 @@ export const buildItemsReducers = (builder: ActionReducerMapBuilder<ItemsState>)
       state.loading = false;
       state.error = action.error.message || 'Failed to delete item';
     });
+
+    // Fetch request by ID
+  builder
+    .addCase(fetchRequestById.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    }
+    )
+    .addCase(fetchRequestById.fulfilled, (state, action) => {
+      state.loading = false;
+      const requestId = action.payload.id;
+      state.reqById[requestId] = action.payload;
+      if (!state.allReqIds.includes(requestId)) {
+        state.allReqIds.push(requestId);
+      }
+    }
+    )
+    .addCase(fetchRequestById.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.error.message || 'Failed to fetch request';
+    }
+    );
 };

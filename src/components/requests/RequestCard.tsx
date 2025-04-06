@@ -78,8 +78,19 @@ const RequestCard: React.FC<RequestCardProps> = ({
   // Check if request is new (created in last 24 hours)
   const isNew = new Date(request.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000);
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't navigate if clicking on buttons, links, or dropdown
+    if ((e.target as HTMLElement).closest('button, a, [role="menuitem"]')) {
+      return;
+    }
+    navigate(`/requests/${request.id}/tracking`);
+  };
+
   return (
-    <Card className="transition-shadow hover:shadow-md">
+    <Card 
+      className="transition-shadow hover:shadow-md border border-border dark:border-border/20 dark:hover:border-border/40 dark:bg-gray-800 cursor-pointer"
+      onClick={handleCardClick}
+    >
       <CardContent className="p-0">
         <div className="p-4 md:p-5">
           {/* Status Badge - Top right */}
@@ -113,9 +124,9 @@ const RequestCard: React.FC<RequestCardProps> = ({
           {/* Item & Borrower Info */}
           <div className="flex gap-4">
             {/* Item Image */}
-            <div className="flex-shrink-0 w-20 h-20 rounded-md overflow-hidden bg-muted">
+            <div className="flex-shrink-0 w-20 h-20 rounded-md overflow-hidden bg-muted dark:bg-muted/20 border border-border/20 dark:border-border/10">
               <Link to={`/items/${request.item.id}`}>
-                <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground">
+                <div className="w-full h-full flex items-center justify-center bg-muted dark:bg-muted/20 text-muted-foreground">
                   <Package className="h-8 w-8" />
                 </div>
               </Link>
@@ -124,24 +135,24 @@ const RequestCard: React.FC<RequestCardProps> = ({
             <div className="flex-1 min-w-0">
               {/* Item Title & Category */}
               <Link to={`/items/${request.item.id}`} className="block">
-                <h3 className="font-medium text-lg mb-0.5 line-clamp-1 hover:text-primary transition-colors">
+                <h3 className="font-medium text-lg mb-0.5 line-clamp-1 hover:text-primary dark:hover:text-primary/90 transition-colors">
                   {request.item.title}
                 </h3>
               </Link>
-              <p className="text-xs text-muted-foreground mb-2">Owner: {request.item.owner_username}</p>
+              <p className="text-xs text-muted-foreground dark:text-muted-foreground/80 mb-2">Owner: {request.item.owner_username}</p>
 
               {/* Borrower Info */}
               <Link to={`/profile/${request.borrower_profile.user_id}`} className="flex items-center gap-2 group mb-2">
-                <Avatar className="h-6 w-6">
+                <Avatar className="h-6 w-6 border border-border/20 dark:border-border/10">
                   <AvatarFallback>{request.borrower_profile.username.charAt(0).toUpperCase()}</AvatarFallback>
                 </Avatar>
-                <span className="text-sm font-medium group-hover:text-primary transition-colors">
+                <span className="text-sm font-medium group-hover:text-primary dark:group-hover:text-primary/90 transition-colors">
                   {request.borrower_profile.username}
                 </span>
               </Link>
 
               {/* Dates */}
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1 text-xs text-muted-foreground dark:text-muted-foreground/80">
                 <CalendarRange className="h-3.5 w-3.5" />
                 <span>{formatDate(request.start_date)}</span>
                 <span>-</span>
@@ -153,7 +164,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
           </div>
 
           {/* Message */}
-          <div className="mt-4 p-3 rounded-md bg-muted/40 text-sm">
+          <div className="mt-4 p-3 rounded-md bg-muted/40 dark:bg-muted/10 dark:border dark:border-border/10 text-sm">
             <p className="line-clamp-2">{request.borrower_message}</p>
           </div>
 

@@ -1,14 +1,17 @@
-export type RequestStatus = "PENDING" | "APPROVED" | "DECLINED" | "CANCELLED" | "COMPLETED";
+export type RequestStatus = "PENDING" | "APPROVED" | "DECLINED" | "CANCELLED" | "COMPLETED" | "CANCELLED_BORROWER" | "CANCELLED_LENDER" | "RETURN_INITIATED" | "RETURN_COMPLETED" | "RETURN_DECLINED" | "RETURNED" | "PICKED_UP" | "ACCEPTED" | "PICKED_UP";
 
 export type RequestItem = { 
   id: number; 
   title: string; 
-  owner_username: string 
+  owner_username: string;
+  image_url: string | null;
 };
 
 export type RequestProfile = { 
   user_id: number; 
-  username: string 
+  username: string ;
+  avatar: string | null;
+  
 };
 
 export interface BorrowRequest {
@@ -16,6 +19,8 @@ export interface BorrowRequest {
   item: RequestItem;
   borrower_profile: RequestProfile;
   lender_profile: RequestProfile;
+  pickup_date: string;
+  return_date: string;
   start_date: string;
   end_date: string;
   status: RequestStatus;

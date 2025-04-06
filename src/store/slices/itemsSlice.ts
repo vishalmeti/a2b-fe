@@ -28,6 +28,8 @@ const itemsSlice = createSlice({
   initialState: {
     itemsById: {},
     allIds: [],
+    reqById: {},
+    allReqIds: [],
     myItemIds: [],
     categories: {},
     loading: false,

@@ -63,3 +63,12 @@ export const requestItem = createAsyncThunk(
     return response.data;
   }
 );
+
+export const fetchRequestById = createAsyncThunk(
+  'items/fetchRequestById',
+  async (requestId: number) => {
+    const response = await apiService.get(`/requests/${requestId}/`);
+    return response.data;
+  }
+);
+

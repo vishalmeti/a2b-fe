@@ -58,6 +58,8 @@ export interface Category {
 export interface ItemsState {
   itemsById: Record<string, Item>;
   allIds: number[];
+  reqById: Record<string, Item>;
+  allReqIds: number[];
   myItemIds: number[];
   categories: Record<string, number>; // Map of category name to id
   loading: boolean;

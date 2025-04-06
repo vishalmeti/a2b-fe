@@ -140,7 +140,6 @@ const RequestsReceivedPage = () => {
   const handleMessage = (borrowerId: number, requestId: number) => {
     toast({ title: "Opening Chat..." });
     console.log(`Maps to message thread for borrower ${borrowerId}, request ${requestId}`);
-    // navigate(`/messages/${borrowerId}?context=request&requestId=${requestId}`);
   };
 
   // --- Loading State ---
