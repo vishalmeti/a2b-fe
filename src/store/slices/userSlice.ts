@@ -10,12 +10,13 @@ export interface UserState {
   receivedRequests: any[];
   requestsLoading: boolean;
   requestsError: string | null;
+  theme: 'light' | 'dark';
 }
 
 export const fetchUser = createAsyncThunk(
   'users/me',
   async () => {
-    const response = await apiService.get('/users/me');
+    const response = await apiService.get(UserRepository.ME);
     return response.data;
   }
 );
@@ -23,10 +24,18 @@ export const fetchUser = createAsyncThunk(
 export const fetchReceivedRequests = createAsyncThunk(
   'users/receivedRequests',
   async () => {
-    const response = await apiService.get('/requests/');
+    const response = await apiService.get(UserRepository.GET_RECEIVED_REQUESTS);
     return response.data;
   }
 );
+
+// Get initial theme from localStorage if available
+const getInitialTheme = (): 'light' | 'dark' => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('theme') as 'light' | 'dark' || 'light';
+  }
+  return 'light';
+};
 
 const userSlice = createSlice({
   name: 'user',
@@ -37,6 +46,7 @@ const userSlice = createSlice({
     receivedRequests: [],
     requestsLoading: false,
     requestsError: null,
+    theme: getInitialTheme(),
   } as UserState,
   reducers: {
     clearUser: (state) => {
@@ -44,6 +54,15 @@ const userSlice = createSlice({
     },
     updateUserData: (state, action) => {
       state.data = { ...state.data, ...action.payload };
+    },
+    toggleTheme: (state) => {
+      state.theme = state.theme === 'light' ? 'dark' : 'light';
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('theme', state.theme);
+        const root = window.document.documentElement;
+        root.classList.remove('light', 'dark');
+        root.classList.add(state.theme);
+      }
     }
   },
   extraReducers: (builder) => {
@@ -75,5 +94,5 @@ const userSlice = createSlice({
   },
 });
 
-export const { clearUser, updateUserData } = userSlice.actions;
+export const { clearUser, updateUserData, toggleTheme } = userSlice.actions;
 export default userSlice.reducer;

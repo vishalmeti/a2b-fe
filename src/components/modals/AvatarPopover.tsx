@@ -6,10 +6,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { LogIn, User as UserIcon } from "lucide-react";
+import { LogIn, User as UserIcon, Moon, Sun } from "lucide-react";
 import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '@/store/store';
-import { fetchUser } from '@/store/slices/userSlice';
+import { fetchUser, toggleTheme } from '@/store/slices/userSlice';
+import { Switch } from "@/components/ui/switch";
 
 import { useEffect } from "react";
 
@@ -20,7 +21,7 @@ interface AvatarPopoverProps {
 export const AvatarPopover = ({ onLogout }: AvatarPopoverProps) => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
-  const { data, loading, error } = useSelector((state: RootState) => state.user);
+  const { data, loading, error, theme } = useSelector((state: RootState) => state.user);
   
   useEffect(() => {
     if(!data?.profile_picture_url) {
@@ -40,6 +41,16 @@ export const AvatarPopover = ({ onLogout }: AvatarPopoverProps) => {
       </PopoverTrigger>
       <PopoverContent className="w-56" align="end">
         <div className="space-y-1">
+          <div className="flex items-center justify-between p-2 border-b">
+            <div className="flex items-center">
+              {theme === 'light' ? <Sun className="h-4 w-4 mr-2" /> : <Moon className="h-4 w-4 mr-2" />}
+              <span>Dark Mode</span>
+            </div>
+            <Switch
+              checked={theme === 'dark'}
+              onCheckedChange={() => dispatch(toggleTheme())}
+            />
+          </div>
           <Button
             variant="ghost"
             className="w-full justify-start"
