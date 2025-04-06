@@ -21,7 +21,7 @@ interface ItemCardProps {
 const ItemCard = ({ id, name, description, image, category, distance, owner }: ItemCardProps) => {
   return (
     <Link to={`/items/${id}`}>
-      <Card className="h-full overflow-hidden transition-shadow hover:shadow-md">
+      <Card className="h-full overflow-hidden transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
         <div className="aspect-video w-full overflow-hidden">
           <img
             src={image}
@@ -31,7 +31,7 @@ const ItemCard = ({ id, name, description, image, category, distance, owner }: I
         </div>
         <CardHeader className="p-4">
           <div className="flex items-center justify-between">
-            <Badge variant="outline" className="bg-brand-neutral-lightest">
+            <Badge variant="outline" className="bg-brand-neutral-lightest dark:text-gray-950">
               {category}
             </Badge>
             <div className="flex items-center text-sm text-muted-foreground">

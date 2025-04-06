@@ -41,7 +41,7 @@ const ItemDetail = () => {
     return (
       <div className="flex min-h-screen flex-col">
         <NavBar />
-        <div className="flex justify-center items-center flex-1">
+        <div className="flex justify-center items-center flex-1 dark:bg-slate-900">
           <div className="w-full max-w-lg bg-card text-card-foreground p-8 md:p-12 rounded-xl border shadow-md text-center transition-shadow duration-300 ease-in-out hover:shadow-xl animate-fade-in">
             <div className="mb-6 flex justify-center">
               <TriangleAlert className="w-20 h-20 text-primary animate-pulse" strokeWidth={2.5} />
@@ -72,7 +72,7 @@ const ItemDetail = () => {
   const ownerName = `${item.owner.user.first_name} ${item.owner.user.last_name}`;
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col dark:bg-slate-900 bg-brand-neutral-lightest">
       <NavBar />
 
       <main className="flex-1 container py-8">

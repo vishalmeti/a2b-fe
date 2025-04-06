@@ -108,7 +108,7 @@ const Auth = () => {
     <div className="flex min-h-screen flex-col">
       {isLoading && <LoadingScreen baseMessage={activeTab === 'login' ? 'Logging in ..' : 'Creating your account ..'} />}
       <NavBar />
-      <main className="flex-1 flex items-center justify-center py-12">
+      <main className="flex-1 flex items-center justify-center py-12 dark:bg-gray-900 bg-brand-neutral-lightest">
         <div className="container max-w-md px-4 md:px-6">
           <Card className="w-full">
             <Tabs value={activeTab} onValueChange={handleTabChange}>

@@ -175,7 +175,7 @@ const Browse = () => {
               </div>
               <div className="flex-1 p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <Badge variant="outline" className="bg-brand-neutral-lightest">
+                  <Badge variant="outline" className="bg-brand-neutral-lightest dark:bg-slate-800">
                     {item.category}
                   </Badge>
                   <div className="flex items-center text-sm text-muted-foreground">
@@ -195,7 +195,7 @@ const Browse = () => {
                   <div className="text-sm">
                     <p className="font-medium">{item.owner.name}</p>
                     <div className="flex items-center">
-                      <span className="text-yellow-500">★</span>
+                      <span className="text-yellow-500 dark:text-yellow-400">★</span>
                       <span className="ml-1">{item.owner.rating}</span>
                     </div>
                   </div>
@@ -216,7 +216,7 @@ const Browse = () => {
     if (error) {
       return (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="rounded-full bg-destructive/10 p-6 mb-4">
+          <div className="rounded-full bg-destructive/10 dark:bg-destructive/20 p-6 mb-4">
             <Search className="h-10 w-10 text-destructive" />
           </div>
           <h3 className="text-lg font-semibold mb-2">Error loading items</h3>
@@ -255,7 +255,7 @@ const Browse = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-background dark:bg-gray-900">
       <NavBar />
       
       <main className="flex-1 container py-8">
@@ -362,15 +362,15 @@ const Browse = () => {
                 </Select>
               </div>
 
-                <div className="h-[calc(100vh-400px)] overflow-y-auto px-4 rounded-md">
-                  {renderContent()}
-                </div>
+              <div className="h-[calc(100vh-400px)] overflow-y-auto px-4 rounded-md">
+                {renderContent()}
+              </div>
             </div>
           </div>
         </div>
       </main>
 
-      <footer className="w-full py-6 bg-muted">
+      <footer className="w-full py-6 bg-muted dark:bg-slate-800">
         <div className="container px-4 md:px-6">
           <p className="text-sm text-muted-foreground text-center">
             © {new Date().getFullYear()} Borrow Anything. All rights reserved.
