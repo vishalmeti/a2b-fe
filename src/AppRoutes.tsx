@@ -16,6 +16,8 @@ const RegisterPage = lazy(() => import("@/pages/Auth"));
 const NotFoundPage = lazy(() => import("@/pages/NotFound"));
 const ItemDetailsPage = lazy(() => import("@/pages/ItemDetail"));
 const RequestTrackingPage = lazy(() => import("@/pages/RequestTrackingPage"));
+const LoadingScreen = lazy(() => import("@/components/loader/LoadingScreen"));
+
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -45,7 +47,7 @@ const AppRoutes = () => {
     <div className="min-h-screen flex flex-col">
       {/* <NavBar /> */}
       <main className="flex-1">
-        <Suspense fallback={<div className="container py-8">Loading...</div>}>
+        <Suspense fallback={<LoadingScreen baseMessage="Loading..." />}>
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<HomePage />} />
