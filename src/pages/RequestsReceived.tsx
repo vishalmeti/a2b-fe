@@ -115,7 +115,7 @@ const RequestsReceivedPage = () => {
   // --- Action Handlers ---
   const handleApprove = async (requestId: number) => {
     try {
-      await apiService.post(`/requests/${requestId}/approve/`, {
+      await apiService.patch(`/requests/${requestId}/accept/`, {
         lender_response_message: "Request approved"
       });
       toast({ title: "Request Approved", variant: "success" });
@@ -127,7 +127,7 @@ const RequestsReceivedPage = () => {
   
   const handleDecline = async (requestId: number) => {
     try {
-      await apiService.post(`/requests/${requestId}/decline/`, {
+      await apiService.patch(`/requests/${requestId}/cancel/`, {
         lender_response_message: "Request declined"
       });
       toast({ title: "Request Declined", variant: "destructive" });
