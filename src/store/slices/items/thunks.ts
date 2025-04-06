@@ -2,6 +2,8 @@ import { createAsyncThunk } from '@reduxjs/toolkit';
 import { apiService } from '@/services/apiService';
 import { ItemRepository } from '@/repositories/Item';
 import { Item } from './types';
+import { UserRepository } from '@/repositories/User';
+
 
 export const fetchCategories = createAsyncThunk(
   'items/fetchCategories',
@@ -52,6 +54,14 @@ export const deleteItem = createAsyncThunk(
   'items/deleteItem',
   async (itemId: number) => {
     const response = await apiService.delete(`/items/${itemId}/`);
+    return response.data;
+  }
+);
+
+export const fetchReceivedRequests = createAsyncThunk(
+  'users/receivedRequests',
+  async () => {
+    const response = await apiService.get(UserRepository.GET_RECEIVED_REQUESTS);
     return response.data;
   }
 );

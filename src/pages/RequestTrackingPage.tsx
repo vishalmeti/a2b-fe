@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import { fetchRequestById, acceptRequest, performPickup, performReturn, completeReturn } from "@/store/slices/items/thunks";
 import { apiService } from "@/services/apiService";
-import { fetchReceivedRequests, } from "@/store/slices/userSlice";
+import { fetchReceivedRequests, } from "@/store/slices/itemsSlice";
 import { useToast } from "@/hooks/use-toast";
 
 

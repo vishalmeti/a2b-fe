@@ -18,7 +18,7 @@ import { acceptRequest } from "@/store/slices/items/thunks";
 
 
 // Redux
-import { fetchReceivedRequests } from "@/store/slices/userSlice";
+import { fetchReceivedRequests } from "@/store/slices/itemsSlice";
 import { RootState } from "@/store/store";
 import { apiService } from "@/services/apiService";
 
@@ -42,6 +42,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import values from "lodash/values";
+
 // Icons
 import {
   Search,
@@ -61,8 +63,8 @@ const RequestsReceivedPage = () => {
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   
   // Get requests from Redux store
-  const { receivedRequests, requestsLoading: loading, requestsError } = useSelector(
-    (state: RootState) => state.user
+  const { reqById, requestsLoading: loading, requestsError } = useSelector(
+    (state: RootState) => state.items
   );
 
   // --- Data Loading ---
@@ -83,7 +85,7 @@ const RequestsReceivedPage = () => {
 
   // --- Filtering Logic ---
   const filteredRequests = useMemo(() => {
-    return receivedRequests?.filter((request: BorrowRequest) => {
+    return values(reqById)?.filter((request: BorrowRequest) => {
       let filterMatch = false;
       if (activeFilter === "all") filterMatch = true;
       else if (activeFilter === "other") filterMatch = request.status === "DECLINED" || request.status === "CANCELLED";
@@ -100,11 +102,11 @@ const RequestsReceivedPage = () => {
       }
       return true;
     });
-  }, [receivedRequests, activeFilter, searchQuery]);
+  }, [reqById, activeFilter, searchQuery]);
 
   // --- Counts for Sidebar/Stats ---
   const counts = useMemo(() => {
-    return (receivedRequests || []).reduce((acc: Record<FilterType, number>, req: BorrowRequest) => {
+    return (values(reqById) || []).reduce((acc: Record<FilterType, number>, req: BorrowRequest) => {
       acc.all++;
       if (req.status === 'PENDING') acc.PENDING++;
       else if (req.status === 'ACCEPTED') acc.ACCEPTED++;
@@ -112,12 +114,13 @@ const RequestsReceivedPage = () => {
       else if (req.status === 'DECLINED' || req.status === 'CANCELLED') acc.other++;
       return acc;
     }, { all: 0, PENDING: 0, ACCEPTED: 0, COMPLETED: 0, other: 0 });
-  }, [receivedRequests]);
+  }, [reqById]);
 
   // --- Action Handlers ---
   const handleApprove = async (requestId: number) => {
     try {
-      dispatch(acceptRequest(requestId) as any);
+      const x = dispatch(acceptRequest(requestId) as any);
+      console.log("xx",x);
       toast({ title: "Request Approved", variant: "success" });
       // dispatch(fetchReceivedRequests() as any);
     } catch (error) {

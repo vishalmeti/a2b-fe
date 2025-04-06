@@ -12,6 +12,7 @@ import {
   performReturn,
   performPickup,
   completeReturn,
+  fetchReceivedRequests,
 } from './thunks';
 
 export const buildItemsReducers = (builder: ActionReducerMapBuilder<ItemsState>) => {
@@ -129,6 +130,28 @@ export const buildItemsReducers = (builder: ActionReducerMapBuilder<ItemsState>)
     .addCase(updateItemData.rejected, (state, action) => {
       state.loading = false;
       state.error = action.error.message || 'Failed to update item';
+    });
+  
+  // Fetch received requests
+  builder
+    .addCase(fetchReceivedRequests.pending, (state) => {
+      state.requestsLoading = true;
+      state.requestsError = null;
+    })
+    .addCase(fetchReceivedRequests.fulfilled, (state, action) => {
+      state.requestsLoading = false;
+      state.receivedRequests = action.payload;
+      for (let i = 0; i < action.payload.length; i++) {
+        const requestId = action.payload[i].id;
+        state.reqById[requestId] = action.payload[i];
+        if (!state.allReqIds.includes(requestId)) {
+          state.allReqIds.push(requestId);
+        }
+      }
+    })
+    .addCase(fetchReceivedRequests.rejected, (state, action) => {
+      state.requestsLoading = false;
+      state.requestsError = action.error.message || 'Failed to fetch requests';
     });
   
   // Accept request

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export interface ItemImage {
   url: string;
   id: number;
@@ -64,4 +66,7 @@ export interface ItemsState {
   categories: Record<string, number>; // Map of category name to id
   loading: boolean;
   error: string | null;
+  receivedRequests: any[];
+  requestsLoading: boolean;
+  requestsError: string | null;
 }

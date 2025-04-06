@@ -7,9 +7,9 @@ export interface UserState {
   data: any;
   loading: boolean;
   error: string | null;
-  receivedRequests: any[];
-  requestsLoading: boolean;
-  requestsError: string | null;
+  // receivedRequests: any[];
+  // requestsLoading: boolean;
+  // requestsError: string | null;
   theme: 'light' | 'dark';
 }
 
@@ -21,13 +21,13 @@ export const fetchUser = createAsyncThunk(
   }
 );
 
-export const fetchReceivedRequests = createAsyncThunk(
-  'users/receivedRequests',
-  async () => {
-    const response = await apiService.get(UserRepository.GET_RECEIVED_REQUESTS);
-    return response.data;
-  }
-);
+// export const fetchReceivedRequests = createAsyncThunk(
+//   'users/receivedRequests',
+//   async () => {
+//     const response = await apiService.get(UserRepository.GET_RECEIVED_REQUESTS);
+//     return response.data;
+//   }
+// );
 
 // Get initial theme from localStorage if available
 const getInitialTheme = (): 'light' | 'dark' => {
@@ -43,9 +43,9 @@ const userSlice = createSlice({
     data: null,
     loading: false,
     error: null,
-    receivedRequests: [],
-    requestsLoading: false,
-    requestsError: null,
+    // receivedRequests: [],
+    // requestsLoading: false,
+    // requestsError: null,
     theme: getInitialTheme(),
   } as UserState,
   reducers: {
@@ -79,18 +79,18 @@ const userSlice = createSlice({
         state.loading = false;
         state.error = action.error.message || 'Failed to fetch user data';
       })
-      .addCase(fetchReceivedRequests.pending, (state) => {
-        state.requestsLoading = true;
-        state.requestsError = null;
-      })
-      .addCase(fetchReceivedRequests.fulfilled, (state, action) => {
-        state.requestsLoading = false;
-        state.receivedRequests = action.payload;
-      })
-      .addCase(fetchReceivedRequests.rejected, (state, action) => {
-        state.requestsLoading = false;
-        state.requestsError = action.error.message || 'Failed to fetch requests';
-      });
+      // .addCase(fetchReceivedRequests.pending, (state) => {
+      //   state.requestsLoading = true;
+      //   state.requestsError = null;
+      // })
+      // .addCase(fetchReceivedRequests.fulfilled, (state, action) => {
+      //   state.requestsLoading = false;
+      //   state.receivedRequests = action.payload;
+      // })
+      // .addCase(fetchReceivedRequests.rejected, (state, action) => {
+      //   state.requestsLoading = false;
+      //   state.requestsError = action.error.message || 'Failed to fetch requests';
+      // });
   },
 });
 

@@ -13,6 +13,7 @@ import {
   performPickup,
   performReturn,
   completeReturn,
+  fetchReceivedRequests,
 } from './items/thunks';
 
 // Re-export the types and thunks for use in components
@@ -29,6 +30,7 @@ export {
   performPickup,
   performReturn,
   completeReturn,
+  fetchReceivedRequests,
 };
 
 const itemsSlice = createSlice({
@@ -40,6 +42,9 @@ const itemsSlice = createSlice({
     allReqIds: [],
     myItemIds: [],
     categories: {},
+    receivedRequests: [],
+    requestsLoading: false,
+    requestsError: null,
     loading: false,
     error: null,
   } as ItemsState,
