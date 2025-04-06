@@ -8,7 +8,11 @@ import {
   fetchMyItems, 
   updateItemData, 
   deleteItem,
-  requestItem
+  requestItem,
+  acceptRequest,
+  performPickup,
+  performReturn,
+  completeReturn,
 } from './items/thunks';
 
 // Re-export the types and thunks for use in components
@@ -20,7 +24,11 @@ export {
   fetchMyItems,
   updateItemData,
   deleteItem,
-  requestItem
+  requestItem,
+  acceptRequest,
+  performPickup,
+  performReturn,
+  completeReturn,
 };
 
 const itemsSlice = createSlice({

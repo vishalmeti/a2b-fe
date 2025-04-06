@@ -7,7 +7,11 @@ import {
   fetchCategories, 
   updateItemData, 
   deleteItem,
-  fetchRequestById
+  fetchRequestById,
+  acceptRequest,
+  performReturn,
+  performPickup,
+  completeReturn,
 } from './thunks';
 
 export const buildItemsReducers = (builder: ActionReducerMapBuilder<ItemsState>) => {
@@ -127,6 +131,82 @@ export const buildItemsReducers = (builder: ActionReducerMapBuilder<ItemsState>)
       state.error = action.error.message || 'Failed to update item';
     });
   
+  // Accept request
+  builder
+    .addCase(acceptRequest.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    })
+    .addCase(acceptRequest.fulfilled, (state, action) => {
+      state.loading = false;
+      const requestId = action.payload.id;
+      state.reqById[requestId] = action.payload;
+      if (!state.allReqIds.includes(requestId)) {
+        state.allReqIds.push(requestId);
+      }
+    })
+    .addCase(acceptRequest.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.error.message || 'Failed to accept request';
+    });
+  
+  // Perform pickup
+  builder
+    .addCase(performPickup.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    })
+    .addCase(performPickup.fulfilled, (state, action) => {
+      state.loading = false;
+      const requestId = action.payload.id;
+      state.reqById[requestId] = action.payload;
+      if (!state.allReqIds.includes(requestId)) {
+        state.allReqIds.push(requestId);
+      }
+    })
+    .addCase(performPickup.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.error.message || 'Failed to perform pickup';
+    });
+
+  // Return item
+  builder
+    .addCase(performReturn.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    })
+    .addCase(performReturn.fulfilled, (state, action) => {
+      state.loading = false;
+      const requestId = action.payload.id;
+      state.reqById[requestId] = action.payload;
+      if (!state.allReqIds.includes(requestId)) {
+        state.allReqIds.push(requestId);
+      }
+    })
+    .addCase(performReturn.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.error.message || 'Failed to return item';
+    });
+  
+  // Complete return
+  builder
+    .addCase(completeReturn.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    })
+    .addCase(completeReturn.fulfilled, (state, action) => {
+      state.loading = false;
+      const requestId = action.payload.id;
+      state.reqById[requestId] = action.payload;
+      if (!state.allReqIds.includes(requestId)) {
+        state.allReqIds.push(requestId);
+      }
+    })
+    .addCase(completeReturn.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.error.message || 'Failed to complete return';
+    });
+    
   // Delete item
   builder
     .addCase(deleteItem.pending, (state) => {

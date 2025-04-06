@@ -14,6 +14,8 @@ import RequestCard from "@/components/requests/RequestCard";
 import RequestFilterTabs, { FilterType } from "@/components/requests/RequestFilterTabs";
 import RequestSummaryCards from "@/components/requests/RequestSummaryCards";
 import EmptyRequestState from "@/components/requests/EmptyRequestState";
+import { acceptRequest } from "@/store/slices/items/thunks";
+
 
 // Redux
 import { fetchReceivedRequests } from "@/store/slices/userSlice";
@@ -115,11 +117,9 @@ const RequestsReceivedPage = () => {
   // --- Action Handlers ---
   const handleApprove = async (requestId: number) => {
     try {
-      await apiService.patch(`/requests/${requestId}/accept/`, {
-        lender_response_message: "Request approved"
-      });
+      dispatch(acceptRequest(requestId) as any);
       toast({ title: "Request Approved", variant: "success" });
-      dispatch(fetchReceivedRequests() as any);
+      // dispatch(fetchReceivedRequests() as any);
     } catch (error) {
       toast({ title: "Error approving request", variant: "destructive" });
     }

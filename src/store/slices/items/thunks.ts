@@ -72,3 +72,43 @@ export const fetchRequestById = createAsyncThunk(
   }
 );
 
+export const acceptRequest = createAsyncThunk(
+  'items/acceptRequest',
+  async (requestId: number) => {
+    const response = await apiService.patch(`/requests/${requestId}/accept/`, {
+        lender_response_message: "Request approved"
+      });
+    return response.data;
+  }
+);
+
+export const performPickup = createAsyncThunk(
+  'items/performPickup',
+  async (requestId: number) => {
+    const response = await apiService.patch(`/requests/${requestId}/confirm-pickup/`, {
+        lender_response_message: "Item picked up"
+      });
+    return response.data;
+  }
+);
+
+export const performReturn = createAsyncThunk(
+  'items/performReturn',
+  async (requestId: number) => {
+    const response = await apiService.patch(`/requests/${requestId}/confirm-return/`, {
+        lender_response_message: "Item returned"
+      });
+    return response.data;
+  }
+);
+
+export const completeReturn = createAsyncThunk(
+  'items/completeReturn',
+  async (requestId: number) => {
+    const response = await apiService.patch(`/requests/${requestId}/complete/`, {
+        lender_response_message: "Return completed"
+      });
+    return response.data;
+  }
+);
+

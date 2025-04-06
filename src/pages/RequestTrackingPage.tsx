@@ -5,7 +5,11 @@ import { useDispatch, useSelector } from "react-redux";
 
 // Redux
 import { AppDispatch, RootState } from "@/store/store";
-import { fetchRequestById } from "@/store/slices/items/thunks";
+import { fetchRequestById, acceptRequest, performPickup, performReturn, completeReturn } from "@/store/slices/items/thunks";
+import { apiService } from "@/services/apiService";
+import { fetchReceivedRequests, } from "@/store/slices/userSlice";
+import { useToast } from "@/hooks/use-toast";
+
 
 // Components
 import Navbar from "@/components/NavBar";
@@ -103,6 +107,7 @@ const TimelineStep: React.FC<TimelineStepProps> = ({
 const RequestTrackingPage: React.FC = () => {
   const { requestId } = useParams<{ requestId: string }>();
   const dispatch = useDispatch<AppDispatch>();
+  const { toast } = useToast();
   const [request, setRequest] = useState({} as BorrowRequest);
   
   // Get request data from Redux store
@@ -111,6 +116,43 @@ const RequestTrackingPage: React.FC = () => {
     loading, 
     error 
   } = useSelector((state: RootState) => state.items);
+
+  const handleAccept = async (requestId: number) => {
+    try {
+      dispatch(acceptRequest(Number(requestId)));
+      toast({ title: "Request Accepted", variant: "success" });
+    } catch (error) {
+      toast({ title: "Error accepting request", variant: "destructive" });
+    }
+  };
+
+  const handlePickup = async (requestId: number) => {
+    try {
+      dispatch(performPickup(Number(requestId)));
+      toast({ title: "Request Picked Up", variant: "success" });
+    } catch (error) {
+      toast({ title: "Error picking up request", variant: "destructive" });
+    }
+  };
+
+  const handleReturn = async (requestId: number) => {
+    try {
+      dispatch(performReturn(Number(requestId)));
+      toast({ title: "Request Returned", variant: "success" });
+    } catch (error) {
+      toast({ title: "Error returning request", variant: "destructive" });
+    }
+  };
+
+  const handleCompleteReturn = async (requestId: number) => {
+    try {
+      dispatch(completeReturn(Number(requestId)));
+      toast({ title: "Request Completed", variant: "success" });
+    } catch (error) {
+      toast({ title: "Error completing request", variant: "destructive" });
+    }
+  };
+
   
   // Get current user from Redux store
   const { data } = useSelector((state: RootState) => state.user);
@@ -411,25 +453,47 @@ const RequestTrackingPage: React.FC = () => {
               <XCircle className="h-4 w-4 mr-1.5" /> Cancel Request
             </Button>
           )}
+
+          {request.status === "PENDING" && data?.user?.id === request.lender_profile?.user_id &&  (
+            <div>
+              <Button size="sm" onClick={() => handleAccept(request.id)}>
+                <CheckCircle className="h-4 w-4 mr-1.5" /> Accept Request
+              </Button>
+            </div>
+          )}
           
-          {(request.status === "ACCEPTED" || request.status === "PICKED_UP") && (
+          {/* {(request.status === "ACCEPTED" || request.status === "PICKED_UP") && (
             <Button variant="outline" size="sm">
               <MessageCircle className="h-4 w-4 mr-1.5" /> Message Lender
             </Button>
-          )}
+          )} */}
           
           {request.status === "ACCEPTED" && 
            data?.user?.id === request.borrower_profile?.user_id && (
-            <Button size="sm">
-              <CheckCircle className="h-4 w-4 mr-1.5" /> Confirm Pickup
+            <div onClick={() => handlePickup(request.id)} className="flex items-center">
+            <Button size="sm" >
+              <CheckCircle className="h-4 w-4 mr-1.5" /> Item Picked Up
             </Button>
+            </div>
           )}
           
-          {request.status === "PICKED_UP" && (
-            <Button size="sm">
-              <ArrowLeft className="h-4 w-4 mr-1.5" /> Mark as Returned
-            </Button>
+          {request.status === "PICKED_UP" && data?.user?.id === request.borrower_profile?.user_id &&  (
+            <div onClick={() => handleReturn(request.id)} className="flex items-center">
+              <Button size="sm">
+                <ArrowLeft className="h-4 w-4 mr-1.5" /> Item Returned
+              </Button>
+            </div>
           )}
+
+          {
+            request.status === "RETURNED" && data?.user?.id === request.lender_profile?.user_id && (
+            <div onClick={() => handleCompleteReturn(request.id)} className="flex items-center">
+              <Button size="sm">
+                <CheckCheck className="h-4 w-4 mr-1.5" /> Confirm Item Return
+              </Button>
+            </div>
+          )}
+          
         </div>
       </div>
     </>
