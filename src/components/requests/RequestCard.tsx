@@ -6,6 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/store/store";
+
+import { useToast } from "@/hooks/use-toast";
+import { performPickup, performReturn, completeReturn } from "@/store/slices/items/thunks";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +22,9 @@ import {
 // Icons
 import {
   CheckCircle, XCircle, MessageCircle, MoreVertical, Clock,
-  CalendarRange, AlertCircle, Package, Check, X
+  CalendarRange, AlertCircle, Package, Check, X,
+  ArrowLeft,
+  CheckCheck
 } from "lucide-react";
 
 // Types
@@ -67,6 +74,9 @@ const RequestCard: React.FC<RequestCardProps> = ({
   onMessage, 
   navigate 
 }) => {
+  const { data } = useSelector((state: RootState) => state.user);
+    const dispatch = useDispatch<AppDispatch>();
+  const { toast } = useToast();
   const statusIcon = {
     PENDING: <Clock className="h-3.5 w-3.5 mr-1.5" />,
     APPROVED: <CheckCircle className="h-3.5 w-3.5 mr-1.5" />,
@@ -74,6 +84,33 @@ const RequestCard: React.FC<RequestCardProps> = ({
     DECLINED: <X className="h-3.5 w-3.5 mr-1.5" />,
     CANCELLED: <AlertCircle className="h-3.5 w-3.5 mr-1.5" />,
   }
+
+  const handlePickup = async (requestId: number) => {
+      try {
+        dispatch(performPickup(Number(requestId)));
+        toast({ title: "Request Picked Up", variant: "success" });
+      } catch (error) {
+        toast({ title: "Error picking up request", variant: "destructive" });
+      }
+    };
+  
+    const handleReturn = async (requestId: number) => {
+      try {
+        dispatch(performReturn(Number(requestId)));
+        toast({ title: "Request Returned", variant: "success" });
+      } catch (error) {
+        toast({ title: "Error returning request", variant: "destructive" });
+      }
+    };
+  
+    const handleCompleteReturn = async (requestId: number) => {
+      try {
+        dispatch(completeReturn(Number(requestId)));
+        toast({ title: "Request Completed", variant: "success" });
+      } catch (error) {
+        toast({ title: "Error completing request", variant: "destructive" });
+      }
+    };
   
   // Check if request is new (created in last 24 hours)
   const isNew = new Date(request.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -166,11 +203,40 @@ const RequestCard: React.FC<RequestCardProps> = ({
                 <Button size="sm" variant="outline" onClick={() => onDecline(request.id)}>
                   <XCircle className="h-4 w-4 mr-1.5" /> Decline
                 </Button>
-                <Button size="sm" variant="default" onClick={() => onApprove(request.id)}>
-                  <CheckCircle className="h-4 w-4 mr-1.5" /> Approve
-                </Button>
+                {data?.user?.id === request.lender_profile?.user_id &&  (
+                  <div>
+                    <Button size="sm" onClick={() => onApprove(request.id)}>
+                      <CheckCircle className="h-4 w-4 mr-1.5" /> Accept Request
+                    </Button>
+                  </div>
+                )}
               </>
             )}
+            {request.status === "ACCEPTED" && 
+           data?.user?.id === request.borrower_profile?.user_id && (
+            <div onClick={() => handlePickup(request.id)} className="flex items-center">
+            <Button size="sm" >
+              <CheckCircle className="h-4 w-4 mr-1.5" /> Item Picked Up
+            </Button>
+            </div>
+          )}
+          
+          {request.status === "PICKED_UP" && data?.user?.id === request.borrower_profile?.user_id &&  (
+            <div onClick={() => handleReturn(request.id)} className="flex items-center">
+              <Button size="sm">
+                <ArrowLeft className="h-4 w-4 mr-1.5" /> Item Returned
+              </Button>
+            </div>
+          )}
+
+          {
+            request.status === "RETURNED" && data?.user?.id === request.lender_profile?.user_id && (
+            <div onClick={() => handleCompleteReturn(request.id)} className="flex items-center">
+              <Button size="sm">
+                <CheckCheck className="h-4 w-4 mr-1.5" /> Confirm Item Return
+              </Button>
+            </div>
+          )}
             <Button size="sm" variant="outline" onClick={() => navigate(`/requests/${request.id}/tracking`)}>
               <CalendarRange className="h-4 w-4 mr-1.5" /> Track
             </Button>

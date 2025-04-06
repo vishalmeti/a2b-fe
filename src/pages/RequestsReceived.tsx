@@ -111,16 +111,17 @@ const RequestsReceivedPage = () => {
       if (req.status === 'PENDING') acc.PENDING++;
       else if (req.status === 'ACCEPTED') acc.ACCEPTED++;
       else if (req.status === 'COMPLETED') acc.COMPLETED++;
+      else if (req.status === 'RETURNED') acc.RETURNED++;
+      else if (req.status === 'PICKED_UP') acc.PICKED_UP++;
       else if (req.status === 'DECLINED' || req.status === 'CANCELLED') acc.other++;
       return acc;
-    }, { all: 0, PENDING: 0, ACCEPTED: 0, COMPLETED: 0, other: 0 });
+    }, { all: 0, PENDING: 0, ACCEPTED: 0, PICKED_UP:0 , RETURNED: 0 ,COMPLETED: 0, other: 0 });
   }, [reqById]);
 
   // --- Action Handlers ---
   const handleApprove = async (requestId: number) => {
     try {
-      const x = dispatch(acceptRequest(requestId) as any);
-      console.log("xx",x);
+      dispatch(acceptRequest(requestId) as any);
       toast({ title: "Request Approved", variant: "success" });
       // dispatch(fetchReceivedRequests() as any);
     } catch (error) {
@@ -232,6 +233,8 @@ const RequestsReceivedPage = () => {
                 {activeFilter === "all" ? "All Requests" : 
                 activeFilter === "PENDING" ? "Pending Requests" :
                 activeFilter === "ACCEPTED" ? "Approved Requests" :
+                activeFilter === "PICKED_UP" ? "Picked Up Requests" :
+                activeFilter === "RETURNED" ? "Returned Requests" :
                 activeFilter === "COMPLETED" ? "Completed Requests" :
                 "Declined/Canceled Requests"}
               </h2>

@@ -1,7 +1,7 @@
 import React from "react";
 
 // Types
-export type FilterType = "all" | "PENDING" | "ACCEPTED" | "COMPLETED" | "other";
+export type FilterType = "all" | "PENDING" | "ACCEPTED" | "COMPLETED" | "PICKED_UP" |"RETURNED" | "other";
 
 interface RequestFilterTabsProps {
   activeFilter: FilterType;
@@ -17,12 +17,14 @@ const RequestFilterTabs: React.FC<RequestFilterTabsProps> = ({
   return (
     <div className="sticky top-16 z-30 bg-background pt-2 pb-0 border-b border-border mb-8 shadow-sm">
       <div className="flex overflow-x-auto scrollbar-none -mb-px">
-        {(["all", "PENDING", "ACCEPTED", "COMPLETED", "other"] as FilterType[]).map((filter) => {
+        {(["all", "PENDING", "ACCEPTED","PICKED_UP" ,"RETURNED" , "COMPLETED" , "other"] as FilterType[]).map((filter) => {
           const isActive = activeFilter === filter;
           const label = filter === 'all' ? 'All Requests' : 
                         filter === 'PENDING' ? 'Pending' : 
                         filter === 'ACCEPTED' ? 'Accepted' :
                         filter === 'COMPLETED' ? 'Completed' : 
+                        filter === 'RETURNED' ? 'Returned' :
+                        filter === 'PICKED_UP' ? 'Picked Up' :
                         'Declined/Canceled';
           const count = counts[filter];
           return (
