@@ -370,13 +370,13 @@ const Browse = () => {
         </div>
       </main>
 
-      <footer className="w-full py-6 bg-muted dark:bg-slate-800">
+      {/* <footer className="w-full py-6 bg-muted dark:bg-slate-800">
         <div className="container px-4 md:px-6">
           <p className="text-sm text-muted-foreground text-center">
             © {new Date().getFullYear()} Borrow Anything. All rights reserved.
           </p>
         </div>
-      </footer>
+      </footer> */}
     </div>
   );
 };

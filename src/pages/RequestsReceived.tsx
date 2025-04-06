@@ -190,43 +190,6 @@ const RequestsReceivedRedesign = () => {
     // navigate(`/messages/${borrowerId}?context=request&requestId=${requestId}`);
   };
 
-  // --- Sidebar Component ---
-  const SidebarContent = () => (
-    <nav className="flex flex-col gap-1.5 p-4">
-      <h2 className="text-lg font-semibold mb-3 px-2">Filter Requests</h2>
-      {(["all", "PENDING", "APPROVED", "COMPLETED", "other"] as FilterType[]).map((filter) => {
-        const isActive = activeFilter === filter;
-        const label = filter === 'other' ? 'Declined/Cancelled' : filter.charAt(0).toUpperCase() + filter.slice(1).toLowerCase();
-        const count = counts[filter];
-        let Icon = Inbox;
-        if (filter === 'PENDING') Icon = Clock;
-        else if (filter === 'APPROVED') Icon = CheckCircle;
-        else if (filter === 'COMPLETED') Icon = Check;
-        else if (filter === 'other') Icon = X;
-
-        return (
-          <Button
-            key={filter}
-            variant={isActive ? "secondary" : "ghost"}
-            className={`justify-start h-9 ${isActive ? 'font-medium' : ''}`}
-            onClick={() => {
-                setActiveFilter(filter);
-                setIsMobileFiltersOpen(false); // Close sheet on selection
-            }}
-          >
-            <Icon className="h-4 w-4 mr-2.5" />
-            <span>{label}</span>
-            {count > 0 && <Badge variant={isActive ? "default" : "secondary"} className="ml-auto text-xs">{count}</Badge>}
-          </Button>
-        );
-      })}
-      <Separator className="my-3" />
-      <Button variant="ghost" className="justify-start h-9 text-muted-foreground">
-          <SlidersHorizontal className="h-4 w-4 mr-2.5"/> Advanced Filters
-      </Button>
-    </nav>
-  );
-
   // --- Loading State ---
   if (loading) {
     return (
@@ -242,39 +205,32 @@ const RequestsReceivedRedesign = () => {
   // --- Main Render ---
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Desktop Sidebar */}
-      <aside className="hidden lg:block w-64 border-r border-border fixed top-0 left-0 h-full pt-16">
-         <div className="h-[calc(100vh-4rem)] overflow-y-auto">
-             <SidebarContent />
-         </div>
-      </aside>
-
-      {/* Main content area */}
-      <div className="flex flex-col w-full lg:pl-64">
+      {/* Main content area - Full width */}
+      <div className="flex flex-col w-full">
         <NavBar />
 
         {/* Content area */}
-        <main className="flex-1">
+        <main className="flex-1 pb-8">
           <div className="container max-w-6xl mx-auto px-4 py-6">
 
             {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-3">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Incoming Requests</h1>
-                    <p className="text-muted-foreground text-sm mt-1">Manage borrow requests for your items.</p>
+                    <h1 className="text-3xl font-bold tracking-tight">Incoming Requests</h1>
+                    <p className="text-muted-foreground text-sm mt-1">Manage borrow requests for your items</p>
                 </div>
                 <div className="flex items-center gap-2 w-full md:w-auto">
                    {/* Mobile Filter Trigger */}
                    <Sheet open={isMobileFiltersOpen} onOpenChange={setIsMobileFiltersOpen}>
                       <SheetTrigger asChild className="lg:hidden">
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" className="rounded-full">
                            <FilterIcon className="h-4 w-4" />
                            <span className="sr-only">Filters</span>
                         </Button>
                       </SheetTrigger>
-                      <SheetContent side="left" className="w-72 p-0">
+                      {/* <SheetContent side="left" className="w-72 p-0">
                          <SidebarContent />
-                      </SheetContent>
+                      </SheetContent> */}
                     </Sheet>
 
                     {/* Search */}
@@ -285,88 +241,171 @@ const RequestsReceivedRedesign = () => {
                           placeholder="Search requests..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          className="pl-9"
+                          className="pl-9 rounded-full border-muted-foreground/20"
                         />
                     </div>
-                    {/* Future Sort/Advanced Filters */}
+                    {/* Sort/Advanced Filters */}
                      <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                           <Button variant="outline" size="icon" className="hidden md:inline-flex">
+                           <Button variant="outline" size="icon" className="hidden md:inline-flex rounded-full">
                               <SlidersHorizontal className="h-4 w-4"/>
                               <span className="sr-only">Sort & Filter</span>
                            </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                            <DropdownMenuLabel>Sort By</DropdownMenuLabel>
-                           {/* ... sort options */}
+                           <DropdownMenuItem>Newest First</DropdownMenuItem>
+                           <DropdownMenuItem>Oldest First</DropdownMenuItem>
+                           <DropdownMenuSeparator />
+                           <DropdownMenuItem>Borrow Date</DropdownMenuItem>
+                           <DropdownMenuItem>Item Name</DropdownMenuItem>
                         </DropdownMenuContent>
                      </DropdownMenu>
                 </div>
             </div>
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                <Card>
-                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Pending Actions</CardTitle>
-                      <Hand className="h-4 w-4 text-muted-foreground" />
-                   </CardHeader>
-                   <CardContent>
-                      <div className="text-2xl font-bold">{counts.PENDING}</div>
-                      <p className="text-xs text-muted-foreground">Requests awaiting your response</p>
-                   </CardContent>
-                </Card>
-                <Card>
-                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Approved & Upcoming</CardTitle>
-                      <CheckCircle className="h-4 w-4 text-muted-foreground" />
-                   </CardHeader>
-                   <CardContent>
-                      <div className="text-2xl font-bold">{counts.APPROVED}</div>
-                       <p className="text-xs text-muted-foreground">Current or upcoming borrows</p>
-                   </CardContent>
-                </Card>
-                 <Card className="hidden lg:block">
-                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Total Requests</CardTitle>
-                      <Inbox className="h-4 w-4 text-muted-foreground" />
-                   </CardHeader>
-                   <CardContent>
-                      <div className="text-2xl font-bold">{counts.all}</div>
-                       <p className="text-xs text-muted-foreground">All requests received</p>
-                   </CardContent>
-                </Card>
+            {/* Tabbed Navigation for Request Stages */}
+            <div className="border-b border-border mb-8">
+              <div className="flex overflow-x-auto scrollbar-none -mb-px">
+                {(["all", "PENDING", "APPROVED", "COMPLETED", "other"] as FilterType[]).map((filter) => {
+                  const isActive = activeFilter === filter;
+                  const label = filter === 'all' ? 'All Requests' : 
+                               filter === 'PENDING' ? 'Pending' : 
+                               filter === 'APPROVED' ? 'Approved' :
+                               filter === 'COMPLETED' ? 'Completed' : 
+                               'Declined/Canceled';
+                  const count = counts[filter];
+                  return (
+                    <button
+                      key={filter}
+                      className={`px-4 py-2 flex items-center whitespace-nowrap text-sm font-medium ${
+                        isActive 
+                          ? 'text-primary border-b-2 border-primary' 
+                          : 'text-muted-foreground hover:text-foreground hover:border-b-2 hover:border-muted-foreground/30'
+                      }`}
+                      onClick={() => setActiveFilter(filter)}
+                    >
+                      {label}
+                      {count > 0 && (
+                        <span className={`ml-2 rounded-full px-2 py-0.5 text-xs ${
+                          isActive ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                        }`}>
+                          {count}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            {/* Request List */}
-            <div className="space-y-4">
+            {/* Summary Cards - Show based on active filter */}
+            {activeFilter === "all" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                  <Card className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-amber-900/20 border-amber-200 dark:border-amber-900/50">
+                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-amber-900 dark:text-amber-300">Pending Actions</CardTitle>
+                        <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                     </CardHeader>
+                     <CardContent>
+                        <div className="text-2xl font-bold text-amber-900 dark:text-amber-300">{counts.PENDING}</div>
+                        <p className="text-xs text-amber-700/70 dark:text-amber-400/70">Requests awaiting your response</p>
+                     </CardContent>
+                  </Card>
+                  
+                  <Card className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/30 dark:to-emerald-900/20 border-emerald-200 dark:border-emerald-900/50">
+                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-emerald-900 dark:text-emerald-300">Approved & Active</CardTitle>
+                        <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                     </CardHeader>
+                     <CardContent>
+                        <div className="text-2xl font-bold text-emerald-900 dark:text-emerald-300">{counts.APPROVED}</div>
+                        <p className="text-xs text-emerald-700/70 dark:text-emerald-400/70">Current or upcoming borrows</p>
+                     </CardContent>
+                  </Card>
+                  
+                  <Card className="bg-gradient-to-br from-sky-50 to-blue-50 dark:from-sky-950/30 dark:to-sky-900/20 border-sky-200 dark:border-sky-900/50">
+                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-sky-900 dark:text-sky-300">Completed</CardTitle>
+                        <Check className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+                     </CardHeader>
+                     <CardContent>
+                        <div className="text-2xl font-bold text-sky-900 dark:text-sky-300">{counts.COMPLETED}</div>
+                        <p className="text-xs text-sky-700/70 dark:text-sky-400/70">Successfully completed borrows</p>
+                     </CardContent>
+                  </Card>
+                  
+                  <Card className="bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-900/50 dark:to-slate-800/30 border-slate-200 dark:border-slate-700/50">
+                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total Requests</CardTitle>
+                        <Inbox className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+                     </CardHeader>
+                     <CardContent>
+                        <div className="text-2xl font-bold">{counts.all}</div>
+                        <p className="text-xs text-muted-foreground">All requests received</p>
+                     </CardContent>
+                  </Card>
+              </div>
+            )}
+
+            {/* Section Title based on active filter */}
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold">
+                {activeFilter === "all" ? "All Requests" : 
+                 activeFilter === "PENDING" ? "Pending Requests" :
+                 activeFilter === "APPROVED" ? "Approved Requests" :
+                 activeFilter === "COMPLETED" ? "Completed Requests" :
+                 "Declined/Canceled Requests"}
+              </h2>
+              
+              {filteredRequests?.length > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Showing {filteredRequests.length} {filteredRequests.length === 1 ? 'request' : 'requests'}
+                </p>
+              )}
+            </div>
+
+            {/* Request List - Grouped by stages for better organization */}
+            <div className="space-y-6">
               {filteredRequests?.length > 0 ? (
-                filteredRequests.map((request: BorrowRequest) => (
-                  <RequestCard
-                    key={request.id}
-                    request={request}
-                    onApprove={handleApprove}
-                    onDecline={handleDecline}
-                    onMessage={handleMessage}
-                    navigate={navigate}
-                  />
-                ))
+                <div className="grid grid-cols-1 gap-4">
+                  {filteredRequests.map((request: BorrowRequest) => (
+                    <div key={request.id} className="animate-fadeIn">
+                      <RequestCard
+                        key={request.id}
+                        request={request}
+                        onApprove={handleApprove}
+                        onDecline={handleDecline}
+                        onMessage={handleMessage}
+                        navigate={navigate}
+                      />
+                    </div>
+                  ))}
+                </div>
               ) : (
-                // Enhanced Empty State
-                 <div className="flex flex-col items-center justify-center py-16 text-center rounded-lg border border-dashed border-border bg-card/50 min-h-[300px]">
-                   <Package className="h-16 w-16 text-muted-foreground/30 mb-4" />
-                   <h3 className="text-xl font-semibold text-foreground">
-                     {searchQuery ? "No matching requests" : `No ${activeFilter !== 'all' ? activeFilter.toLowerCase() : ''} requests`}
-                   </h3>
-                   <p className="text-muted-foreground mt-1 max-w-sm text-sm">
-                     {searchQuery
-                       ? "Try adjusting your search or changing the filter."
-                       : "Looks like there are no requests in this category."}
-                   </p>
-                   {activeFilter !== 'all' && (
-                     <Button variant="link" onClick={() => setActiveFilter('all')} className="mt-4">View All Requests</Button>
-                   )}
-                 </div>
+                // Enhanced Empty State with animation
+                <div className="flex flex-col items-center justify-center py-16 text-center rounded-xl border border-dashed border-border bg-muted/30 min-h-[300px] animate-fadeIn">
+                  <div className="mb-4 p-4 bg-background rounded-full border border-border">
+                    <Package className="h-12 w-12 text-muted-foreground/50" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground">
+                    {searchQuery ? "No matching requests" : `No ${activeFilter !== 'all' ? activeFilter.toLowerCase() : ''} requests`}
+                  </h3>
+                  <p className="text-muted-foreground mt-2 max-w-sm text-sm">
+                    {searchQuery
+                      ? "Try adjusting your search or changing the filter."
+                      : activeFilter === 'PENDING' ? "When someone requests to borrow your items, they'll appear here."
+                      : activeFilter === 'APPROVED' ? "Requests you've approved will appear here."
+                      : activeFilter === 'COMPLETED' ? "Completed borrows will appear here."
+                      : activeFilter === 'other' ? "Declined or canceled requests will appear here."
+                      : "You haven't received any requests yet."}
+                  </p>
+                  {activeFilter !== 'all' && (
+                    <Button variant="outline" onClick={() => setActiveFilter('all')} className="mt-6">
+                      View All Requests
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
           </div> {/* End container */}
@@ -421,7 +460,7 @@ const RequestCard: React.FC<RequestCardProps> = ({ request, onApprove, onDecline
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => navigate(`/item/${request.item.id}`)}>View Item</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate(`/items/${request.item.id}`)}>View Item</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate(`/profile/${request.borrower_profile.user_id}`)}>View Profile</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem disabled>Report</DropdownMenuItem>
@@ -433,7 +472,7 @@ const RequestCard: React.FC<RequestCardProps> = ({ request, onApprove, onDecline
           <div className="flex gap-4">
             {/* Item Image */}
             <div className="flex-shrink-0 w-20 h-20 rounded-md overflow-hidden bg-muted">
-              <Link to={`/item/${request.item.id}`}>
+              <Link to={`/items/${request.item.id}`}>
                 {/* Placeholder - we'll need to get actual image from the API */}
                 <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground">
                   <Package className="h-8 w-8" />
@@ -443,7 +482,7 @@ const RequestCard: React.FC<RequestCardProps> = ({ request, onApprove, onDecline
 
             <div className="flex-1 min-w-0">
               {/* Item Title & Category */}
-              <Link to={`/item/${request.item.id}`} className="block">
+              <Link to={`/items/${request.item.id}`} className="block">
                 <h3 className="font-medium text-lg mb-0.5 line-clamp-1 hover:text-primary transition-colors">
                   {request.item.title}
                 </h3>
