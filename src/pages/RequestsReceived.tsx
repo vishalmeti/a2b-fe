@@ -105,11 +105,11 @@ const RequestsReceivedPage = () => {
     return (receivedRequests || []).reduce((acc: Record<FilterType, number>, req: BorrowRequest) => {
       acc.all++;
       if (req.status === 'PENDING') acc.PENDING++;
-      else if (req.status === 'APPROVED') acc.APPROVED++;
+      else if (req.status === 'ACCEPTED') acc.ACCEPTED++;
       else if (req.status === 'COMPLETED') acc.COMPLETED++;
       else if (req.status === 'DECLINED' || req.status === 'CANCELLED') acc.other++;
       return acc;
-    }, { all: 0, PENDING: 0, APPROVED: 0, COMPLETED: 0, other: 0 });
+    }, { all: 0, PENDING: 0, ACCEPTED: 0, COMPLETED: 0, other: 0 });
   }, [receivedRequests]);
 
   // --- Action Handlers ---
@@ -228,7 +228,7 @@ const RequestsReceivedPage = () => {
               <h2 className="text-xl font-semibold">
                 {activeFilter === "all" ? "All Requests" : 
                 activeFilter === "PENDING" ? "Pending Requests" :
-                activeFilter === "APPROVED" ? "Approved Requests" :
+                activeFilter === "ACCEPTED" ? "Approved Requests" :
                 activeFilter === "COMPLETED" ? "Completed Requests" :
                 "Declined/Canceled Requests"}
               </h2>
