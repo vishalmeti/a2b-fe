@@ -1,11 +1,16 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 
 // Assuming these are defined elsewhere
 import { useToast } from "@/hooks/use-toast";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import NavBar from "@/components/NavBar";
 import LoadingScreen from "@/components/loader/LoadingScreen";
+import { fetchReceivedRequests } from "@/store/slices/userSlice";
+import { apiService } from "@/services/apiService";
+import { RootState } from "@/store/store";
 
 // Shadcn/ui component imports
 import { Button } from "@/components/ui/button";
@@ -31,31 +36,36 @@ import {
   Star, Inbox, Filter as FilterIcon, Bell, Check, X, Hand // New icons
 } from "lucide-react";
 
-// --- Type Definitions (remain the same) ---
+// --- Type Definitions (updated for API format) ---
 type RequestStatus = "PENDING" | "APPROVED" | "DECLINED" | "CANCELLED" | "COMPLETED";
-type RequestItem = { id: string; title: string; image: string; category: string; };
-type Borrower = { id: string; name: string; avatar: string; rating: number; borrowCount: number; };
-type BorrowRequest = { id: string; item: RequestItem; borrower: Borrower; status: RequestStatus; requestDate: string; startDate: string; endDate: string; message: string; returnDate?: string; isNew: boolean; };
+type RequestItem = { id: number; title: string; owner_username: string };
+type RequestProfile = { user_id: number; username: string };
 
-// --- Sample Data (remain the same) ---
-const sampleRequests: BorrowRequest[] = [
-  // Add more diverse sample data if needed for testing layout
-  { id: "req1", item: { id: "item1", title: "Power Drill", image: "https://images.unsplash.com/photo-1504148455328-c376907d081c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60", category: "Tools" }, borrower: { id: "user1", name: "Sarah Johnson", avatar: "https://randomuser.me/api/portraits/women/44.jpg", rating: 4.8, borrowCount: 12 }, status: "PENDING", requestDate: "2023-07-20T10:30:00Z", startDate: "2023-07-25", endDate: "2023-07-28", message: "Hi! I'm doing some home renovations this weekend and would love to borrow your drill. I'll take good care of it!", isNew: true, },
-  { id: "req2", item: { id: "item2", title: "Mountain Bike - High End Model with Carbon Frame", image: "https://images.unsplash.com/photo-1596495578065-6e0763fa1178?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60", category: "Sports" }, borrower: { id: "user2", name: "Mike Peterson", avatar: "https://randomuser.me/api/portraits/men/67.jpg", rating: 4.5, borrowCount: 8 }, status: "APPROVED", requestDate: "2023-07-18T14:45:00Z", startDate: "2023-07-22", endDate: "2023-07-24", message: "Would love to borrow your bike for a weekend trip with some friends. I'm an experienced rider and will bring it back clean and in good condition.", isNew: false, },
-  { id: "req3", item: { id: "item3", title: "Digital Camera", image: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60", category: "Electronics" }, borrower: { id: "user3", name: "Lisa Garcia", avatar: "https://randomuser.me/api/portraits/women/28.jpg", rating: 4.9, borrowCount: 15 }, status: "COMPLETED", requestDate: "2023-07-05T09:20:00Z", startDate: "2023-07-10", endDate: "2023-07-15", returnDate: "2023-07-15T11:30:00Z", message: "I'm taking a weekend photography class and need a good camera. Would appreciate if I could borrow yours.", isNew: false, },
-  { id: "req4", item: { id: "item4", title: "Camping Tent", image: "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60", category: "Outdoors" }, borrower: { id: "user4", name: "James Wilson", avatar: "https://randomuser.me/api/portraits/men/43.jpg", rating: 4.6, borrowCount: 7 }, status: "DECLINED", requestDate: "2023-07-12T16:15:00Z", startDate: "2023-07-16", endDate: "2023-07-18", message: "Going camping with my family this weekend. Would it be possible to borrow your tent? We'll clean it thoroughly before returning.", isNew: false, },
-  // Add a few more pending
-  { id: "req5", item: { id: "item5", title: "Stand Mixer", image: "https://images.unsplash.com/photo-1594631252845-29fc4cc8cde9?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60", category: "Kitchen" }, borrower: { id: "user5", name: "Emma Taylor", avatar: "https://randomuser.me/api/portraits/women/33.jpg", rating: 4.7, borrowCount: 5 }, status: "PENDING", requestDate: "2023-07-19T11:30:00Z", startDate: "2023-07-24", endDate: "2023-07-26", message: "Baking for charity!", isNew: false, },
-  { id: "req6", item: { id: "item6", title: "Projector", image: "https://images.unsplash.com/photo-1634986666676-ec8fd927c23d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60", category: "Electronics" }, borrower: { id: "user6", name: "Daniel Brown", avatar: "https://randomuser.me/api/portraits/men/20.jpg", rating: 4.4, borrowCount: 3 }, status: "PENDING", requestDate: "2023-07-21T08:00:00Z", startDate: "2023-07-29", endDate: "2023-07-30", message: "Movie night this weekend, hope it's available!", isNew: true, },
-];
+interface BorrowRequest {
+  id: number;
+  item: RequestItem;
+  borrower_profile: RequestProfile;
+  lender_profile: RequestProfile;
+  start_date: string;
+  end_date: string;
+  status: RequestStatus;
+  status_display: string;
+  borrower_message: string;
+  lender_response_message: string;
+  created_at: string;
+  updated_at: string;
+  processed_at: string | null;
+  pickup_confirmed_at: string | null;
+  return_initiated_at: string | null;
+  completed_at: string | null;
+}
 
 // --- Helper Functions ---
 const formatDate = (dateStr: string | undefined): string => {
   if (!dateStr) return "N/A";
   try {
-    // Using UTC to avoid timezone issues if dates are just YYYY-MM-DD
-    const date = new Date(dateStr + 'T00:00:00Z');
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   } catch (e) { return "Invalid date"; }
 };
 
@@ -86,32 +96,37 @@ type FilterType = "all" | RequestStatus | "other"; // "other" includes Declined/
 const RequestsReceivedRedesign = () => {
   useAuthRedirect(); // Check auth status
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { toast } = useToast();
 
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [requests, setRequests] = useState<BorrowRequest[]>([]);
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  
+  // Get requests from Redux store
+  const { receivedRequests, requestsLoading: loading, requestsError } = useSelector(
+    (state: RootState) => state.user
+  );
 
   // --- Data Loading ---
   useEffect(() => {
-    setLoading(true);
-    const timer = setTimeout(() => {
-      const sortedRequests = [...sampleRequests].sort((a, b) =>
-         // Sort primarily by pending status, then by newest request date
-         (a.status === 'PENDING' ? -1 : 1) - (b.status === 'PENDING' ? -1 : 1) ||
-         new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime()
-      );
-      setRequests(sortedRequests);
-      setLoading(false);
-    }, 800); // Slightly faster load simulation
-    return () => clearTimeout(timer);
-  }, []);
+    dispatch(fetchReceivedRequests() as any);
+  }, [dispatch]);
+
+  // Show error toast if request fails
+  useEffect(() => {
+    if (requestsError) {
+      toast({
+        title: "Error loading requests",
+        description: requestsError,
+        variant: "destructive"
+      });
+    }
+  }, [requestsError, toast]);
 
   // --- Filtering Logic ---
   const filteredRequests = useMemo(() => {
-    return requests.filter(request => {
+    return receivedRequests?.filter((request: BorrowRequest) => {
       let filterMatch = false;
       if (activeFilter === "all") filterMatch = true;
       else if (activeFilter === "other") filterMatch = request.status === "DECLINED" || request.status === "CANCELLED";
@@ -123,38 +138,53 @@ const RequestsReceivedRedesign = () => {
         if (!query) return true;
         return (
           request.item.title.toLowerCase().includes(query) ||
-          request.borrower.name.toLowerCase().includes(query) ||
-          request.item.category.toLowerCase().includes(query)
+          request.borrower_profile.username.toLowerCase().includes(query)
         );
       }
       return true;
     });
-  }, [requests, activeFilter, searchQuery]);
+  }, [receivedRequests, activeFilter, searchQuery]);
 
   // --- Counts for Sidebar/Stats ---
   const counts = useMemo(() => {
-    return requests.reduce((acc, req) => {
+    return (receivedRequests || []).reduce((acc: Record<FilterType, number>, req: BorrowRequest) => {
       acc.all++;
       if (req.status === 'PENDING') acc.PENDING++;
       else if (req.status === 'APPROVED') acc.APPROVED++;
       else if (req.status === 'COMPLETED') acc.COMPLETED++;
       else if (req.status === 'DECLINED' || req.status === 'CANCELLED') acc.other++;
       return acc;
-    }, { all: 0, PENDING: 0, APPROVED: 0, COMPLETED: 0, other: 0 } as Record<FilterType, number>);
-  }, [requests]);
+    }, { all: 0, PENDING: 0, APPROVED: 0, COMPLETED: 0, other: 0 });
+  }, [receivedRequests]);
 
-  // --- Action Handlers (Remain similar, log API calls) ---
-  const handleApprove = (requestId: string) => {
-    toast({ title: "Request Approved", variant: "success" });
-    setRequests(prev => prev.map(req => req.id === requestId ? { ...req, status: "APPROVED", isNew: false } : req));
-    console.log(`API CALL: Approve request ${requestId}`);
+  // --- Action Handlers ---
+  const handleApprove = async (requestId: number) => {
+    try {
+      await apiService.post(`/requests/${requestId}/approve/`, {
+        lender_response_message: "Request approved"
+      });
+      toast({ title: "Request Approved", variant: "success" });
+      // Refetch requests to update the UI
+      dispatch(fetchReceivedRequests() as any);
+    } catch (error) {
+      toast({ title: "Error approving request", variant: "destructive" });
+    }
   };
-  const handleDecline = (requestId: string) => {
-    toast({ title: "Request Declined", variant: "destructive" });
-    setRequests(prev => prev.map(req => req.id === requestId ? { ...req, status: "DECLINED", isNew: false } : req));
-    console.log(`API CALL: Decline request ${requestId}`);
+  
+  const handleDecline = async (requestId: number) => {
+    try {
+      await apiService.post(`/requests/${requestId}/decline/`, {
+        lender_response_message: "Request declined"
+      });
+      toast({ title: "Request Declined", variant: "destructive" });
+      // Refetch requests to update the UI
+      dispatch(fetchReceivedRequests() as any);
+    } catch (error) {
+      toast({ title: "Error declining request", variant: "destructive" });
+    }
   };
-  const handleMessage = (borrowerId: string, requestId: string) => {
+  
+  const handleMessage = (borrowerId: number, requestId: number) => {
     toast({ title: "Opening Chat..." });
     console.log(`Maps to message thread for borrower ${borrowerId}, request ${requestId}`);
     // navigate(`/messages/${borrowerId}?context=request&requestId=${requestId}`);
@@ -310,8 +340,8 @@ const RequestsReceivedRedesign = () => {
 
             {/* Request List */}
             <div className="space-y-4">
-              {filteredRequests.length > 0 ? (
-                filteredRequests.map((request) => (
+              {filteredRequests?.length > 0 ? (
+                filteredRequests.map((request: BorrowRequest) => (
                   <RequestCard
                     key={request.id}
                     request={request}
@@ -349,9 +379,9 @@ const RequestsReceivedRedesign = () => {
 // --- Refined Request Card Component ---
 interface RequestCardProps {
   request: BorrowRequest;
-  onApprove: (id: string) => void;
-  onDecline: (id: string) => void;
-  onMessage: (borrowerId: string, requestId: string) => void;
+  onApprove: (id: number) => void;
+  onDecline: (id: number) => void;
+  onMessage: (borrowerId: number, requestId: number) => void;
   navigate: ReturnType<typeof useNavigate>;
 }
 
@@ -363,6 +393,9 @@ const RequestCard: React.FC<RequestCardProps> = ({ request, onApprove, onDecline
     DECLINED: <X className="h-3.5 w-3.5 mr-1.5" />,
     CANCELLED: <AlertCircle className="h-3.5 w-3.5 mr-1.5" />,
   }
+  
+  // Check if request is new (created in last 24 hours)
+  const isNew = new Date(request.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000);
 
   return (
     <Card className="transition-shadow hover:shadow-md">
@@ -371,11 +404,11 @@ const RequestCard: React.FC<RequestCardProps> = ({ request, onApprove, onDecline
           {/* Status Badge - Top right */}
           <div className="flex justify-between items-start mb-4">
             <div className="flex items-center space-x-2">
-              {request.isNew && request.status === "PENDING" && (
+              {isNew && request.status === "PENDING" && (
                 <Badge className="rounded-full px-1.5 h-5 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">New</Badge>
               )}
               <Badge variant={request.status === "PENDING" ? "default" : "outline"} className="capitalize">
-                {statusIcon[request.status]} {request.status.toLowerCase()}
+                {statusIcon[request.status]} {request.status_display}
               </Badge>
             </div>
 
@@ -389,7 +422,7 @@ const RequestCard: React.FC<RequestCardProps> = ({ request, onApprove, onDecline
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => navigate(`/item/${request.item.id}`)}>View Item</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate(`/profile/${request.borrower.id}`)}>View Profile</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate(`/profile/${request.borrower_profile.user_id}`)}>View Profile</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem disabled>Report</DropdownMenuItem>
               </DropdownMenuContent>
@@ -401,7 +434,10 @@ const RequestCard: React.FC<RequestCardProps> = ({ request, onApprove, onDecline
             {/* Item Image */}
             <div className="flex-shrink-0 w-20 h-20 rounded-md overflow-hidden bg-muted">
               <Link to={`/item/${request.item.id}`}>
-                <img src={request.item.image} alt={request.item.title} className="w-full h-full object-cover" />
+                {/* Placeholder - we'll need to get actual image from the API */}
+                <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground">
+                  <Package className="h-8 w-8" />
+                </div>
               </Link>
             </div>
 
@@ -412,35 +448,33 @@ const RequestCard: React.FC<RequestCardProps> = ({ request, onApprove, onDecline
                   {request.item.title}
                 </h3>
               </Link>
-              <p className="text-xs text-muted-foreground mb-2">{request.item.category}</p>
+              <p className="text-xs text-muted-foreground mb-2">Owner: {request.item.owner_username}</p>
 
               {/* Borrower Info */}
-              <Link to={`/profile/${request.borrower.id}`} className="flex items-center gap-2 group mb-2">
+              <Link to={`/profile/${request.borrower_profile.user_id}`} className="flex items-center gap-2 group mb-2">
                 <Avatar className="h-6 w-6">
-                  <AvatarImage src={request.borrower.avatar} />
-                  <AvatarFallback>{request.borrower.name.charAt(0)}</AvatarFallback>
+                  <AvatarFallback>{request.borrower_profile.username.charAt(0).toUpperCase()}</AvatarFallback>
                 </Avatar>
-                <span className="text-sm font-medium group-hover:text-primary transition-colors">{request.borrower.name}</span>
-                <div className="flex items-center text-xs text-muted-foreground">
-                  <Star className="h-3 w-3 mr-0.5" /> {request.borrower.rating.toFixed(1)}
-                </div>
+                <span className="text-sm font-medium group-hover:text-primary transition-colors">
+                  {request.borrower_profile.username}
+                </span>
               </Link>
 
               {/* Dates */}
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <CalendarRange className="h-3.5 w-3.5" />
-                <span>{formatDate(request.startDate)}</span>
+                <span>{formatDate(request.start_date)}</span>
                 <span>-</span>
-                <span>{formatDate(request.endDate)}</span>
+                <span>{formatDate(request.end_date)}</span>
                 <span className="mx-1">•</span>
-                <span>Requested {timeAgo(request.requestDate)}</span>
+                <span>Requested {timeAgo(request.created_at)}</span>
               </div>
             </div>
           </div>
 
           {/* Message */}
           <div className="mt-4 p-3 rounded-md bg-muted/40 text-sm">
-            <p className="line-clamp-2">{request.message}</p>
+            <p className="line-clamp-2">{request.borrower_message}</p>
           </div>
 
           {/* Actions */}
@@ -455,7 +489,7 @@ const RequestCard: React.FC<RequestCardProps> = ({ request, onApprove, onDecline
                 </Button>
               </>
             )}
-            <Button size="sm" variant="outline" onClick={() => onMessage(request.borrower.id, request.id)}>
+            <Button size="sm" variant="outline" onClick={() => onMessage(request.borrower_profile.user_id, request.id)}>
               <MessageCircle className="h-4 w-4 mr-1.5" /> Message
             </Button>
           </div>

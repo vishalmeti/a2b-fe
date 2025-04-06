@@ -7,6 +7,9 @@ export interface UserState {
   data: any;
   loading: boolean;
   error: string | null;
+  receivedRequests: any[];
+  requestsLoading: boolean;
+  requestsError: string | null;
 }
 
 export const fetchUser = createAsyncThunk(
@@ -17,13 +20,13 @@ export const fetchUser = createAsyncThunk(
   }
 );
 
-// export const fetchUserById = createAsyncThunk(
-//   'users/fetchById',
-//   async (id: string | number) => {
-//     const response = await apiService.get(`/users/${id}`);
-//     return response.data;
-//   }
-// );
+export const fetchReceivedRequests = createAsyncThunk(
+  'users/receivedRequests',
+  async () => {
+    const response = await apiService.get('/requests/');
+    return response.data;
+  }
+);
 
 const userSlice = createSlice({
   name: 'user',
@@ -31,6 +34,9 @@ const userSlice = createSlice({
     data: null,
     loading: false,
     error: null,
+    receivedRequests: [],
+    requestsLoading: false,
+    requestsError: null,
   } as UserState,
   reducers: {
     clearUser: (state) => {
@@ -53,22 +59,19 @@ const userSlice = createSlice({
       .addCase(fetchUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Failed to fetch user data';
+      })
+      .addCase(fetchReceivedRequests.pending, (state) => {
+        state.requestsLoading = true;
+        state.requestsError = null;
+      })
+      .addCase(fetchReceivedRequests.fulfilled, (state, action) => {
+        state.requestsLoading = false;
+        state.receivedRequests = action.payload;
+      })
+      .addCase(fetchReceivedRequests.rejected, (state, action) => {
+        state.requestsLoading = false;
+        state.requestsError = action.error.message || 'Failed to fetch requests';
       });
-    // builder
-    //   .addCase(fetchUserById.pending, (state) => {
-    //     state.loading = true;
-    //     state.error = null;
-    //   })
-    //   .addCase(fetchUserById.fulfilled, (state, action) => {
-    //     state.loading = false;
-    //     state.data = action.payload;
-    //   })
-    //   .addCase(fetchUserById.rejected, (state, action) => {
-    //     state.loading = false;
-    //     state.error = action.error.message || 'Failed to fetch user data';
-    //   }
-    //   );
-  
   },
 });
 
