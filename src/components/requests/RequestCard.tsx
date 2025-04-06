@@ -78,19 +78,10 @@ const RequestCard: React.FC<RequestCardProps> = ({
   // Check if request is new (created in last 24 hours)
   const isNew = new Date(request.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-  const handleCardClick = (e: React.MouseEvent) => {
-    // Don't navigate if clicking on buttons, links, or dropdown
-    if ((e.target as HTMLElement).closest('button, a, [role="menuitem"]')) {
-      return;
-    }
-    navigate(`/requests/${request.id}/tracking`);
-  };
 
   return (
     <Card 
-      className="transition-shadow hover:shadow-md border border-border dark:border-border/20 dark:hover:border-border/40 dark:bg-gray-800 cursor-pointer"
-      onClick={handleCardClick}
-    >
+      className="transition-shadow hover:shadow-md border border-border dark:border-border/20 dark:hover:border-border/40 dark:bg-gray-800 cursor-pointer"    >
       <CardContent className="p-0">
         <div className="p-4 md:p-5">
           {/* Status Badge - Top right */}
@@ -180,8 +171,8 @@ const RequestCard: React.FC<RequestCardProps> = ({
                 </Button>
               </>
             )}
-            <Button size="sm" variant="outline" onClick={() => onMessage(request.borrower_profile.user_id, request.id)}>
-              <MessageCircle className="h-4 w-4 mr-1.5" /> Message
+            <Button size="sm" variant="outline" onClick={() => navigate(`/requests/${request.id}/tracking`)}>
+              <CalendarRange className="h-4 w-4 mr-1.5" /> Track
             </Button>
           </div>
         </div>
