@@ -30,7 +30,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaf
 import type { LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { apiService } from "@/services/apiService";
-import { UserRepository } from "@/repositories/User";
+import { CommunityRepository } from "@/repositories/Community";
 
 const placeholderCommunities: Community[] = [
     {
@@ -278,7 +278,7 @@ const CommunityBrowser = () => {
                 description: suggestionForm.description || '',
             };
 
-            await apiService.post(UserRepository.SUGGEST_COMMUNITIES, communityData);
+            await apiService.post(CommunityRepository.SUGGEST_COMMUNITIES, communityData);
             
             // Reset form and close modal
             setSuggestionForm({
@@ -509,10 +509,10 @@ const CommunityBrowser = () => {
                                     </DialogContent>
                                 </Dialog>
                                 
-                                <Button variant="outline" className="hidden sm:flex">
+                                {/* <Button variant="outline" className="hidden sm:flex">
                                     <Plus className="mr-2 h-4 w-4" />
                                     Create Community
-                                </Button>
+                                </Button> */}
                             </div>
                         </div>
 

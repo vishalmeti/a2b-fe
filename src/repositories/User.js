@@ -6,5 +6,4 @@ export const UserRepository = {
   GET_NOTIFICATIONS: "/notifications/",
   GET_RECEIVED_REQUESTS: '/requests/',
   GET_MY_ITEMS: (user_id) => `/items/?user_id=${user_id}`,
-  SUGGEST_COMMUNITIES: "/suggestions/",
 }
