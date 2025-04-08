@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import { Suspense, lazy, useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState, startTransition, useTransition } from "react";
 import NavBar from "@/components/NavBar";
 
 // Lazy load pages for better performance
@@ -22,16 +22,19 @@ const LoadingScreen = lazy(() => import("@/components/loader/LoadingScreen"));
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     // Replace with your actual authentication check
     const token = localStorage.getItem("token");
-    setIsAuthenticated(!!token);
+    startTransition(() => {
+      setIsAuthenticated(!!token);
+    });
   }, []);
 
-  // Show nothing while checking auth
+  // Show loading state while checking auth
   if (isAuthenticated === null) {
-    return null;
+    return <LoadingScreen baseMessage="Checking authentication..." />;
   }
 
   // Redirect to login if not authenticated
@@ -43,21 +46,31 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const AppRoutes = () => {
+  const [isPending, startTransition] = useTransition();
+  
   return (
     <div className="min-h-screen flex flex-col">
       {/* <NavBar /> */}
       <main className="flex-1">
+        {isPending && <LoadingScreen baseMessage="Loading page..." />}
         <Suspense fallback={<LoadingScreen baseMessage="Loading..." />}>
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<HomePage />} />
-            <Route path="/browse" element={<BrowsePage />} />
+            {/* <Route path="/browse" element={<BrowsePage />} /> */}
             <Route path="/communities" element={<CommunitiesPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             
             {/* Protected routes */}
+
+            <Route path="/browse" element={
+              <ProtectedRoute>
+                <BrowsePage />
+              </ProtectedRoute>
+            } />
+
             <Route path="/requests-received" element={
               <ProtectedRoute>
                 <RequestsPage />

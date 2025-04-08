@@ -140,6 +140,9 @@ export const buildItemsReducers = (builder: ActionReducerMapBuilder<ItemsState>)
     })
     .addCase(fetchReceivedRequests.fulfilled, (state, action) => {
       state.requestsLoading = false;
+      state.receivedRequests = [];
+      state.reqById = {};
+      state.allReqIds = [];
       state.receivedRequests = action.payload;
       for (let i = 0; i < action.payload.length; i++) {
         const requestId = action.payload[i].id;
