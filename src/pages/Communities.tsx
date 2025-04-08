@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { Users, ArrowLeft, Check, Plus } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Users, ArrowLeft, Check, Plus, MapPin, AlertCircle, Navigation } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { motion } from 'framer-motion';
 import NavBar from "@/components/NavBar";
@@ -13,6 +13,22 @@ import { CommunityHeader } from "@/components/communities/CommunityHeader";
 import { CommunityLocation } from "@/components/communities/CommunityLocation";
 import { CommunityStats } from "@/components/communities/CommunityStats";
 import { CommunityRules } from "@/components/communities/CommunityRules";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useToast } from "@/components/ui/use-toast";
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
+import type { LatLngExpression } from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 const placeholderCommunities: Community[] = [
     {
@@ -93,12 +109,42 @@ const placeholderCommunities: Community[] = [
     }
 ];
 
+// Define type for the form state
+interface SuggestionFormState {
+    name: string;
+    city: string;
+    pincode: string;
+    latitude: string;
+    longitude: string;
+    description: string;
+}
+
 const CommunityBrowser = () => {
     const [communities] = useState<Community[]>(placeholderCommunities); // Replace with data fetching
     const [selectedCommunityId, setSelectedCommunityId] = useState<string | null>(null);
     const [joinedCommunityIds, setJoinedCommunityIds] = useState<Set<string>>(new Set(['2']));
     const [isLoading, setIsLoading] = useState(true);
     const [isDetailLoading, setIsDetailLoading] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const { toast } = useToast();
+
+    // Form state for community suggestion
+    const [suggestionForm, setSuggestionForm] = useState<SuggestionFormState>({
+        name: '',
+        city: '',
+        pincode: '',
+        latitude: '',
+        longitude: '',
+        description: ''
+    });
+    
+    // Form errors
+    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+    // Map related state
+    const [showMap, setShowMap] = useState(true); // Always show map
+    const [mapCenter, setMapCenter] = useState<[number, number]>([12.9716, 77.5946]); // Default to Bangalore
 
     useEffect(() => {
         // Initial loading simulation
@@ -107,6 +153,17 @@ const CommunityBrowser = () => {
         }, 3000);
         return () => clearTimeout(timer);
     }, []);
+
+    useEffect(() => {
+        // Update map center when latitude/longitude changes
+        const lat = parseFloat(suggestionForm.latitude);
+        const lng = parseFloat(suggestionForm.longitude);
+        
+        // Update map center if valid coordinates are present
+        if (!isNaN(lat) && !isNaN(lng) && suggestionForm.latitude.trim() !== '' && suggestionForm.longitude.trim() !== '') {
+            setMapCenter([lat, lng]);
+        }
+    }, [suggestionForm.latitude, suggestionForm.longitude]);
 
     const selectedCommunity = communities.find(c => c.id === selectedCommunityId);
     const isMember = selectedCommunity ? joinedCommunityIds.has(selectedCommunity.id) : false;
@@ -137,6 +194,108 @@ const CommunityBrowser = () => {
             }
             return newSet;
         });
+    };
+
+    const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setSuggestionForm(prev => ({
+            ...prev,
+            [name]: value
+        }));
+        
+        // Clear error when field is edited
+        if (formErrors[name]) {
+            setFormErrors(prev => ({
+                ...prev,
+                [name]: ''
+            }));
+        }
+
+        // Update map when coordinates change
+        if (name === 'latitude' || name === 'longitude') {
+            // Get updated lat/long values (use the new value for the changing field)
+            const latValue = name === 'latitude' ? value : suggestionForm.latitude;
+            const lngValue = name === 'longitude' ? value : suggestionForm.longitude;
+            
+            const lat = parseFloat(latValue);
+            const lng = parseFloat(lngValue);
+            
+            // Only show map if both are valid numbers and non-empty strings
+            if (!isNaN(lat) && !isNaN(lng) && latValue.trim() !== '' && lngValue.trim() !== '') {
+                setMapCenter([lat, lng]);
+            }
+        }
+    };
+
+    const validateForm = () => {
+        const errors: Record<string, string> = {};
+        
+        if (!suggestionForm.name.trim()) {
+            errors.name = 'Community name is required';
+        }
+        
+        if (!suggestionForm.city.trim()) {
+            errors.city = 'City is required';
+        }
+        
+        if (!suggestionForm.pincode.trim()) {
+            errors.pincode = 'Pincode is required';
+        } else if (!/^\d{5,6}$/.test(suggestionForm.pincode.trim())) {
+            errors.pincode = 'Please enter a valid pincode';
+        }
+        
+        if (suggestionForm.latitude && !/^-?\d{1,3}(\.\d{1,7})?$/.test(suggestionForm.latitude)) {
+            errors.latitude = 'Please enter a valid latitude';
+        }
+        
+        if (suggestionForm.longitude && !/^-?\d{1,3}(\.\d{1,7})?$/.test(suggestionForm.longitude)) {
+            errors.longitude = 'Please enter a valid longitude';
+        }
+        
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
+    const handleSubmitSuggestion = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        if (!validateForm()) {
+            return;
+        }
+        
+        setIsSubmitting(true);
+        
+        try {
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            // Reset form and close modal
+            setSuggestionForm({
+                name: '',
+                city: '',
+                pincode: '',
+                latitude: '',
+                longitude: '',
+                description: ''
+            });
+            
+            setIsModalOpen(false);
+            
+            toast({
+                title: "Community suggestion submitted",
+                description: "Thank you! We'll review your suggestion soon.",
+                duration: 5000,
+            });
+        } catch (error) {
+            toast({
+                title: "Error submitting suggestion",
+                description: "Please try again later.",
+                variant: "destructive",
+                duration: 5000,
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     if (isLoading) {
@@ -180,15 +339,169 @@ const CommunityBrowser = () => {
                     </motion.div>
                 ) : (
                     <div className="space-y-8">
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center flex-wrap gap-4">
                             <div>
                                 <h1 className="text-4xl font-bold tracking-tight text-foreground mb-2">Discover Communities</h1>
                                 <p className="text-muted-foreground">Join communities to share and borrow items with like-minded people</p>
                             </div>
-                            <Button variant="outline" className="hidden sm:flex">
-                                <Plus className="mr-2 h-4 w-4" />
-                                Create Community
-                            </Button>
+                            <div className="flex gap-3 w-full sm:w-auto justify-center sm:justify-end">
+                                <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                                    <DialogTrigger asChild>
+                                        <Button variant="secondary" className="whitespace-nowrap w-full sm:w-auto">
+                                            <MapPin className="mr-2 h-4 w-4" />
+                                            <span className="sm:inline">Suggest Community</span>
+                                            <span className="sm:hidden">Suggest</span>
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="w-[95vw] max-w-[550px] p-4 sm:p-6 top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 fixed max-h-[90vh] overflow-y-auto">
+                                        <DialogHeader className="mb-3">
+                                            <DialogTitle>Suggest a New Community</DialogTitle>
+                                            <DialogDescription>
+                                                Submit details about a community you'd like to see on the platform.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <form onSubmit={handleSubmitSuggestion} className="space-y-3">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="name" className="text-sm font-medium">
+                                                    Community Name*
+                                                </Label>
+                                                <Input
+                                                    id="name"
+                                                    name="name"
+                                                    value={suggestionForm.name}
+                                                    onChange={handleFormChange}
+                                                    placeholder="e.g. Prestige Shantiniketan"
+                                                    className={formErrors.name ? "border-red-500" : ""}
+                                                />
+                                                {formErrors.name && (
+                                                    <p className="text-sm text-red-500 flex items-center mt-1">
+                                                        <AlertCircle className="h-3 w-3 mr-1" />
+                                                        {formErrors.name}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="city" className="text-sm font-medium">
+                                                        City*
+                                                    </Label>
+                                                    <Input
+                                                        id="city"
+                                                        name="city"
+                                                        value={suggestionForm.city}
+                                                        onChange={handleFormChange}
+                                                        placeholder="e.g. Bangalore"
+                                                        className={formErrors.city ? "border-red-500" : ""}
+                                                    />
+                                                    {formErrors.city && (
+                                                        <p className="text-sm text-red-500 flex items-center mt-1">
+                                                            <AlertCircle className="h-3 w-3 mr-1" />
+                                                            {formErrors.city}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="pincode" className="text-sm font-medium">
+                                                        Pincode*
+                                                    </Label>
+                                                    <Input
+                                                        id="pincode"
+                                                        name="pincode"
+                                                        value={suggestionForm.pincode}
+                                                        onChange={handleFormChange}
+                                                        placeholder="e.g. 560037"
+                                                        className={formErrors.pincode ? "border-red-500" : ""}
+                                                    />
+                                                    {formErrors.pincode && (
+                                                        <p className="text-sm text-red-500 flex items-center mt-1">
+                                                            <AlertCircle className="h-3 w-3 mr-1" />
+                                                            {formErrors.pincode}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            
+                                            {/* Map preview */}
+                                            {showMap && (
+                                                <div className="pt-2 pb-1">
+                                                    <Label className="text-sm font-medium mb-2 block">
+                                                        Location Preview
+                                                    </Label>
+                                                    <div className="border rounded-lg overflow-hidden shadow-sm">
+                                                        <div className="p-3 bg-card">
+                                                            <h3 className="text-sm font-medium flex items-center gap-2">
+                                                                <MapPin className="h-4 w-4 text-muted-foreground" />
+                                                                {suggestionForm.city}{suggestionForm.pincode ? `, ${suggestionForm.pincode}` : ''}
+                                                            </h3>
+                                                        </div>
+                                                        <div className="h-[180px] w-full">
+                                                            <MapContainer 
+                                                                center={mapCenter} 
+                                                                zoom={14}
+                                                                style={{ height: '100%', width: '100%' }}
+                                                                key={`map-${mapCenter[0]}-${mapCenter[1]}`}
+                                                                zoomControl={false}
+                                                            >
+                                                                <TileLayer
+                                                                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                                                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                                                />
+                                                                <Marker position={mapCenter}>
+                                                                    <Popup>
+                                                                        {suggestionForm.name || 'New Community'}
+                                                                    </Popup>
+                                                                </Marker>
+                                                                <MapEvents setSuggestionForm={setSuggestionForm} />
+                                                            </MapContainer>
+                                                        </div>
+                                                    </div>
+                                                    <p className="text-xs text-muted-foreground mt-2">
+                                                        Map shows the selected coordinates. Click on the map to set latitude and longitude.
+                                                    </p>
+                                                </div>
+                                            )}
+                                            
+                                            <div className="space-y-2">
+                                                <Label htmlFor="description" className="text-sm font-medium">
+                                                    Description <span className="text-muted-foreground">(optional)</span>
+                                                </Label>
+                                                <Input
+                                                    id="description"
+                                                    name="description"
+                                                    value={suggestionForm.description}
+                                                    onChange={handleFormChange}
+                                                    placeholder="Brief description of the community"
+                                                />
+                                            </div>
+                                            
+                                            <DialogFooter className="pt-4 flex-col sm:flex-row gap-3 justify-center sm:justify-end">
+                                                <Button 
+                                                    type="submit" 
+                                                    disabled={isSubmitting}
+                                                    className="w-full sm:w-auto h-10 text-base"
+                                                >
+                                                    {isSubmitting ? 'Submitting...' : 'Submit Suggestion'}
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    onClick={() => setIsModalOpen(false)}
+                                                    className="w-full sm:w-auto h-10 text-base"
+                                                >
+                                                    Cancel
+                                                </Button>
+                                            </DialogFooter>
+                                        </form>
+                                    </DialogContent>
+                                </Dialog>
+                                
+                                <Button variant="outline" className="hidden sm:flex">
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Create Community
+                                </Button>
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -213,5 +526,19 @@ const CommunityBrowser = () => {
         </>
     );
 }
+
+const MapEvents = ({ setSuggestionForm }: { setSuggestionForm: React.Dispatch<React.SetStateAction<SuggestionFormState>> }) => {
+    useMapEvents({
+        click(e) {
+            const { lat, lng } = e.latlng;
+            setSuggestionForm((prev: SuggestionFormState) => ({
+                ...prev,
+                latitude: lat.toFixed(7),
+                longitude: lng.toFixed(7),
+            }));
+        },
+    });
+    return null;
+};
 
 export default CommunityBrowser;
