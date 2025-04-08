@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Users, ArrowLeft, Check, Plus, MapPin, AlertCircle, Navigation } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { motion } from 'framer-motion';
@@ -31,6 +31,9 @@ import type { LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { apiService } from "@/services/apiService";
 import { CommunityRepository } from "@/repositories/Community";
+import { useSelector } from 'react-redux';
+import type { RootState } from '@/store/store';
+
 
 const placeholderCommunities: Community[] = [
     {
@@ -122,9 +125,12 @@ interface SuggestionFormState {
 }
 
 const CommunityBrowser = () => {
-    const [communities] = useState<Community[]>(placeholderCommunities); // Replace with data fetching
+  const { data } = useSelector((state: RootState) => state.user);
+
+    console.log("User Data:", data?.community);
+    const [communities, setCommunities] = useState<Community[]>([]); // Changed to empty array with setter
     const [selectedCommunityId, setSelectedCommunityId] = useState<string | null>(null);
-    const [joinedCommunityIds, setJoinedCommunityIds] = useState<Set<string>>(new Set(['2']));
+    const [joinedCommunityIds, setJoinedCommunityIds] = useState<Set<string>>(new Set(data?.community ? [data.community.toString()] : []));
     const [isLoading, setIsLoading] = useState(true);
     const [isDetailLoading, setIsDetailLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -148,13 +154,73 @@ const CommunityBrowser = () => {
     const [showMap, setShowMap] = useState(true); // Always show map
     const [mapCenter, setMapCenter] = useState<[number, number]>([12.9716, 77.5946]); // Default to Bangalore
 
-    useEffect(() => {
-        // Initial loading simulation
-        const timer = setTimeout(() => {
+    // Fetch communities from API
+    const fetchCommunities = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const response = await apiService.get(CommunityRepository.GET_COMMUNITIES);;
+            if (response && Array.isArray(response.data)) {
+                // Transform API data to ensure all required properties exist
+                console.log("API response:", response.data);
+                const transformedCommunities = response.data.map(community => ({
+                    id: community.id || '',
+                    name: community.name || '',
+                    description: community.description || '',
+                    longDescription: community.description || '',
+                    // Ensure memberCount is always a number (default to 0 if missing)
+                    memberCount: typeof community.memberCount === 'number' ? community.memberCount : 0,
+                    imageUrl: community.imageUrl || 'https://via.placeholder.com/100/cccccc/000000?text=Community',
+                    tags: Array.isArray(community.tags) ? community.tags : [],
+                    // Ensure stats object exists with default values
+                    stats: {
+                        activeBorrows: community.stats?.activeBorrows || 0,
+                        totalItemsShared: community.stats?.totalItemsShared || 0,
+                        successfulTransactions: community.stats?.successfulTransactions || 0,
+                        averageRating: community.stats?.averageRating || 0
+                    },
+                    rules: Array.isArray(community.rules) ? community.rules : [],
+                    location: community.location || '',
+                    coordinates: community.latitude && community.longitude 
+                        ? { lat: community.latitude, lng: community.longitude } 
+                        : null
+                }));
+                setCommunities(transformedCommunities);
+            } else {
+                // Fallback to placeholder data if API response is not as expected
+                setCommunities(placeholderCommunities);
+                toast({
+                    title: "Warning",
+                    description: "Using placeholder data - API response format unexpected",
+                    variant: "destructive",
+                });
+            }
+        } catch (error) {
+            console.error("Error fetching communities:", error);
+            // Fallback to placeholder data if API call fails
+            setCommunities(placeholderCommunities);
+            toast({
+                title: "Error loading communities",
+                description: "Using placeholder data instead. Please try again later.",
+                variant: "destructive",
+            });
+        } finally {
             setIsLoading(false);
-        }, 3000);
-        return () => clearTimeout(timer);
+        }
+    }, [toast]);
+
+    useEffect(() => {
+        // Fetch communities when component mounts
+        fetchCommunities(); // Adjust delay as needed
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    useEffect(() => {
+        setTimeout(() => {
+            setJoinedCommunityIds(new Set(data?.community ? [data.community.toString()] : []));
+        }
+        , 100);
+    }
+    , [data?.community]);
 
     useEffect(() => {
         // Update map center when latitude/longitude changes
@@ -168,6 +234,7 @@ const CommunityBrowser = () => {
     }, [suggestionForm.latitude, suggestionForm.longitude]);
 
     const selectedCommunity = communities.find(c => c.id === selectedCommunityId);
+    console.log("Selected Community:", selectedCommunity);
     const isMember = selectedCommunity ? joinedCommunityIds.has(selectedCommunity.id) : false;
 
     const handleSelectCommunity = (id: string) => {
@@ -338,7 +405,7 @@ const CommunityBrowser = () => {
                         <CommunityHeader community={selectedCommunity} isMember={isMember} onJoinToggle={handleJoinToggle} />
                         
                         <div className="flex flex-col-reverse sm:flex-row gap-6">
-                            {selectedCommunity.location && (
+                            {selectedCommunity.coordinates && (
                                 <CommunityLocation community={selectedCommunity} />
                             )}
                             {selectedCommunity.longDescription && (
@@ -526,7 +593,7 @@ const CommunityBrowser = () => {
                                 >
                                     <CommunityCard 
                                         community={community}
-                                        isJoined={joinedCommunityIds.has(community.id)}
+                                        isJoined={joinedCommunityIds.has(JSON.stringify(community.id))}
                                         onClick={() => handleSelectCommunity(community.id)}
                                     />
                                 </motion.div>

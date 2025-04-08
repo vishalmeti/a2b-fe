@@ -11,7 +11,7 @@ interface Props {
 export const CommunityLocation = ({ community }: Props) => {
     const coordinates = [community.coordinates.lat, community.coordinates.lng] as LatLngExpression;
     const mapKey = `map-${community.coordinates.lat}-${community.coordinates.lng}`; // Key for forcing re-render
-    
+    console.log("coordinates",coordinates)
     return (
         <Card className='flex-1'>
             <CardHeader>
