@@ -29,6 +29,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import type { LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { apiService } from "@/services/apiService";
+import { UserRepository } from "@/repositories/User";
 
 const placeholderCommunities: Community[] = [
     {
@@ -266,8 +268,17 @@ const CommunityBrowser = () => {
         setIsSubmitting(true);
         
         try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            // Call the API to submit community suggestion
+            const communityData = {
+                suggested_name: suggestionForm.name,
+                city: suggestionForm.city,
+                pincode: suggestionForm.pincode,
+                latitude: suggestionForm.latitude,
+                longitude: suggestionForm.longitude,
+                description: suggestionForm.description || '',
+            };
+
+            await apiService.post(UserRepository.SUGGEST_COMMUNITIES, communityData);
             
             // Reset form and close modal
             setSuggestionForm({
@@ -282,6 +293,7 @@ const CommunityBrowser = () => {
             setIsModalOpen(false);
             
             toast({
+                variant: "success",
                 title: "Community suggestion submitted",
                 description: "Thank you! We'll review your suggestion soon.",
                 duration: 5000,
