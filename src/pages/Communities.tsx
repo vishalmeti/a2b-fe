@@ -130,7 +130,7 @@ const CommunityBrowser = () => {
     console.log("User Data:", data?.community);
     const [communities, setCommunities] = useState<Community[]>([]); // Changed to empty array with setter
     const [selectedCommunityId, setSelectedCommunityId] = useState<string | null>(null);
-    const [joinedCommunityIds, setJoinedCommunityIds] = useState<Set<string>>(new Set(data?.community ? [data.community.toString()] : []));
+    const [joinedCommunityIds, setJoinedCommunityIds] = useState<Set<string>>(new Set(data?.communities ? data.communities.map(community => community.community.toString()) : []));
     const [isLoading, setIsLoading] = useState(true);
     const [isDetailLoading, setIsDetailLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -216,11 +216,11 @@ const CommunityBrowser = () => {
 
     useEffect(() => {
         setTimeout(() => {
-            setJoinedCommunityIds(new Set(data?.community ? [data.community.toString()] : []));
+            setJoinedCommunityIds(new Set(data?.communities ? data.communities.map(community => community.community.toString()) : []));
         }
         , 100);
     }
-    , [data?.community]);
+    , [data?.communities]);
 
     useEffect(() => {
         // Update map center when latitude/longitude changes
@@ -244,14 +244,18 @@ const CommunityBrowser = () => {
         // Simulate loading delay for detail view
         setTimeout(() => {
             setIsDetailLoading(false);
-        }, 3000);
+        }, 1000);
     };
 
     const handleGoBack = () => {
         setSelectedCommunityId(null);
     };
 
-    const handleJoinToggle = (id: string) => {
+    const handleJoinToggle = async (id: string) => {
+        await apiService.post(CommunityRepository.JOIN_COMMUNITY, {
+            "community": id,
+            "is_primary":false
+        });
         setJoinedCommunityIds(prev => {
             const newSet = new Set(prev);
             if (newSet.has(id)) {
@@ -593,7 +597,7 @@ const CommunityBrowser = () => {
                                 >
                                     <CommunityCard 
                                         community={community}
-                                        isJoined={joinedCommunityIds.has(JSON.stringify(community.id))}
+                                        isJoined={joinedCommunityIds.has(community.id.toString())}
                                         onClick={() => handleSelectCommunity(community.id)}
                                     />
                                 </motion.div>

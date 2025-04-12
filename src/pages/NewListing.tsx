@@ -28,6 +28,8 @@ import { ItemRepository } from "@/repositories/Item";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import LoadingScreen from "@/components/loader/LoadingScreen"; // Import the LoadingScreen component
 import { useDispatch, useSelector } from "react-redux";
+import { usersCommunities } from '@/store/slices/userSlice';
+import map from "lodash/map";
 import { fetchCategories } from "@/store/slices/itemsSlice";
 import { RootState } from "@/store/store";
 
@@ -43,8 +45,9 @@ type FormData = {
     deposit_amount: string;
     borrowing_fee: string;
     pickup_details: string;
-    max_borrow_duration_days: string; // <-- Added field
-    availability_notes: string;      // <-- Added field
+    max_borrow_duration_days: string;
+    availability_notes: string;
+    community_id: string; // Changed from community to community_id
 };
 type FormErrors = Partial<Record<keyof FormData | 'images', string>>;
 
@@ -111,19 +114,33 @@ const NewListingUltraModern = () => {
         deposit_amount: "", borrowing_fee: "", pickup_details: "",
         max_borrow_duration_days: "", // <-- Initialized field
         availability_notes: "",      // <-- Initialized field
+        community_id: "",            // <-- Initialized community_id field
     });
     const [formErrors, setFormErrors] = useState<FormErrors>({});
     const [isUploading, setIsUploading] = useState(false); // Add state for tracking upload status
     
     // Get categories from Redux store
     const categoryMap = useSelector((state: RootState) => state.items.categories);
+    // Fix communities mapping to properly extract data from Redux state
+    const communitiesList = useSelector((state: RootState) => {
+        if (!state.user.data?.communities) return [];
+        return state.user.data.communities.map((community: any) => ({
+            value: community.community,
+            label: community?.community_details?.name || 'Unknown Community'
+        }));
+    });
+    console.log("Communities:", communitiesList);
     const categoryList = Object.keys(categoryMap);
     const conditionList = [ { value: "NEW", label: "New" }, { value: "LIKE_NEW", label: "Like New" }, { value: "GOOD", label: "Good" }, { value: "FAIR", label: "Fair" }, { value: "POOR", label: "Poor" } ];
 
     useEffect(() => {
         // Fetch categories from the Redux store
         dispatch(fetchCategories() as any);
+        // Fetch user's communities to check if they are a member
+        dispatch(usersCommunities() as any);
     }, [dispatch]);
+
+
 
     // --- Input Handlers ---
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -173,6 +190,7 @@ const NewListingUltraModern = () => {
             if (!currentData.description.trim()) errors.description = "Description is required.";
             else if (currentData.description.trim().length < 10) errors.description = "Description should be at least 10 characters.";
             if (!currentData.condition) errors.condition = "Please select the item's condition.";
+            if (!currentData.community_id) errors.community_id = "Please select a community.";
         } else if (step === 1) {
             if (!currentData.pickup_details.trim()) errors.pickup_details = "Pickup/Dropoff details are required.";
             const fee = parseFloat(currentData.borrowing_fee || "0");
@@ -247,6 +265,8 @@ const NewListingUltraModern = () => {
             formDataToSubmit.append("deposit_amount", depositAmountFormatted);
             formDataToSubmit.append("borrowing_fee", borrowingFeeFormatted);
             formDataToSubmit.append("pickup_details", formData.pickup_details);
+            // Add community ID to the form data
+            formDataToSubmit.append("community_id", formData.community_id);
             // Append new fields if available
             if (maxDuration !== null) {
                 formDataToSubmit.append("max_borrow_duration_days", maxDuration.toString());
@@ -370,6 +390,29 @@ const NewListingUltraModern = () => {
                                                             </Select>
                                                              {formErrors.condition && <p className="text-xs text-destructive flex items-center pt-1"><AlertCircle className="h-3 w-3 mr-1"/>{formErrors.condition}</p>}
                                                         </div>
+                                                    </div>
+                                                    {/* Community Select - Added Field */}
+                                                    <div className="space-y-1.5">
+                                                        <Label htmlFor="community_id">Community {requiredLabel}</Label>
+                                                        <Select value={formData.community_id} onValueChange={(value) => handleSelectChange("community_id", value)} name="community_id">
+                                                            <SelectTrigger className={cn(formErrors.community_id && "border-destructive focus:ring-destructive")}> 
+                                                                <SelectValue placeholder="Select a community" /> 
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {communitiesList.length > 0 ? (
+                                                                    communitiesList.map((community) => (
+                                                                        <SelectItem key={community.value} value={community.value.toString()}>
+                                                                            {community.label}
+                                                                        </SelectItem>
+                                                                    ))
+                                                                ) : (
+                                                                    <div className="p-2 text-sm text-muted-foreground">
+                                                                        No communities found. Please join a community first.
+                                                                    </div>
+                                                                )}
+                                                            </SelectContent>
+                                                        </Select>
+                                                        {formErrors.community_id && <p className="text-xs text-destructive flex items-center pt-1"><AlertCircle className="h-3 w-3 mr-1"/>{formErrors.community_id}</p>}
                                                     </div>
                                                 </section>
 

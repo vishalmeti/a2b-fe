@@ -21,6 +21,14 @@ export const fetchUser = createAsyncThunk(
   }
 );
 
+export const usersCommunities = createAsyncThunk(
+  'users/communities',
+  async () => {
+    const response = await apiService.get(UserRepository.GET_COMMUNITIES);
+    return response.data;
+  }
+);
+
 // export const fetchReceivedRequests = createAsyncThunk(
 //   'users/receivedRequests',
 //   async () => {
@@ -79,6 +87,18 @@ const userSlice = createSlice({
         state.loading = false;
         state.error = action.error.message || 'Failed to fetch user data';
       })
+      .addCase(usersCommunities.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(usersCommunities.fulfilled, (state, action) => {
+        state.loading = false;
+        state.data = { ...state.data, communities: action.payload };
+      })
+      .addCase(usersCommunities.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to fetch user communities';
+      });
       // .addCase(fetchReceivedRequests.pending, (state) => {
       //   state.requestsLoading = true;
       //   state.requestsError = null;
