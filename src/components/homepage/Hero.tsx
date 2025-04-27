@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Blocks, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import hero from "../../../public/Hero2.webp"
+import hero from "../../../public/Hero3.jpeg"
 
 interface HeroProps {
   community: string;
@@ -45,7 +45,7 @@ export function Hero({ community }: HeroProps) {
               <img
                 src={hero}
                 alt="People sharing items in a community"
-                className="object-cover w-full h-full"
+                className=" w-full h-full"
               />
             </div>
           </div>

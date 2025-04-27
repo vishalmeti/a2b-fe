@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { MapPin } from "lucide-react";
 
 interface ItemCardProps {
   id: number | string;
@@ -10,7 +9,6 @@ interface ItemCardProps {
   description: string;
   image: string;
   category: string;
-  distance: string;
   owner: {
     name: string;
     avatar: string;
@@ -18,7 +16,7 @@ interface ItemCardProps {
   };
 }
 
-const ItemCard = ({ id, name, description, image, category, distance, owner }: ItemCardProps) => {
+const ItemCard = ({ id, name, description, image, category, owner }: ItemCardProps) => {
   return (
     <Link to={`/items/${id}`}>
       <Card className="h-full overflow-hidden transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
@@ -34,10 +32,6 @@ const ItemCard = ({ id, name, description, image, category, distance, owner }: I
             <Badge variant="outline" className="bg-brand-neutral-lightest dark:text-gray-950">
               {category}
             </Badge>
-            <div className="flex items-center text-sm text-muted-foreground">
-              <MapPin className="mr-1 h-3 w-3" />
-              {distance}
-            </div>
           </div>
           <CardTitle className="text-lg">{name}</CardTitle>
         </CardHeader>

@@ -18,10 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Slider
-} from "@/components/ui/slider";
-import { 
-  MapPin, Search, Filter, Grid3X3, List, Loader2
+   Search, Filter, Grid3X3, List
 } from "lucide-react";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import type { RootState } from '@/store/store';
@@ -35,13 +32,6 @@ interface Category {
   name: string;
   icon: string | null;
 }
-
-// Helper function to calculate distance from an item
-const getItemDistance = (item: any): string => {
-  // In a real app, this would calculate distance based on user's location
-  // For now, return random distance between 0.1 and 5 miles
-  return (Math.random() * 5 + 0.1).toFixed(1) + " miles";
-};
 
 // Helper function to transform API item to UI item format
 const transformItemForUI = (item: any) => {
@@ -65,7 +55,7 @@ const transformItemForUI = (item: any) => {
     `https://ui-avatars.com/api/?name=${ownerName.replace(/\s+/g, "+")}&background=random`;
   
   const rating = item.owner?.average_lender_rating || item.average_item_rating || 4.5;
-
+  console.log(item)
   return {
     id: item.id,
     name: item.title,
@@ -76,7 +66,6 @@ const transformItemForUI = (item: any) => {
       avatar: ownerAvatar,
       rating: rating,
     },
-    distance: getItemDistance(item),
     category: item.category?.name || "Uncategorized",
     condition: item.condition?.replace('_', ' ').toLowerCase() || "good condition",
     price: parseFloat(item.borrowing_fee) > 0 ? 
@@ -87,6 +76,7 @@ const transformItemForUI = (item: any) => {
       "No deposit",
     maxDuration: item.max_borrow_duration_days || 7,
     community: item.community_name || "Local Community",
+    created_at: item.created_at,
   };
 };
 
@@ -97,8 +87,9 @@ const Browse = () => {
   
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
-  const [distance, setDistance] = useState([5]);
   const [viewMode, setViewMode] = useState("grid");
+  const [sortBy, setSortBy] = useState("newest"); // Add state for sorting
+  const [selectedCommunity, setSelectedCommunity] = useState("All Communities"); // Add state for community filter
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [categoryError, setCategoryError] = useState<string | null>(null);
@@ -133,15 +124,27 @@ const Browse = () => {
   // Transform items from the store to the UI format
   const storeItems = allIds.map(id => transformItemForUI(itemsById[id]));
 
-  // Filter items based on search query, category, and distance
+  // Derive unique communities from items
+  const communities = ["All Communities", ...new Set(storeItems.map(item => item.community).filter(Boolean))];
+
+  // Filter items based on search query and category
   const filteredItems = storeItems.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           item.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === "All Categories" || item.category === selectedCategory;
-    const matchesDistance = parseFloat(item.distance) <= distance[0];
-    
-    return matchesSearch && matchesCategory && matchesDistance;
+    const matchesCommunity = selectedCommunity === "All Communities" || item.community === selectedCommunity; // Add community filter logic
+
+    return matchesSearch && matchesCategory && matchesCommunity; // Include community match
   });
+
+  // Sort items based on the selected criteria
+  if (sortBy === "newest") {
+    filteredItems.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  } else if (sortBy === "rating") {
+    // Assuming owner.rating is a number. Add logic if it's not always available or needs parsing.
+    filteredItems.sort((a, b) => (b.owner.rating || 0) - (a.owner.rating || 0));
+  }
+  // 'relevance' is the default order from the API/filtering, so no explicit sort needed unless defined otherwise.
 
   const GridView = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -153,9 +156,7 @@ const Browse = () => {
           description={item.description}
           image={item.image}
           category={item.category}
-          distance={item.distance}
-          owner={item.owner}
-        />
+          owner={item.owner}       />
       ))}
     </div>
   );
@@ -178,10 +179,6 @@ const Browse = () => {
                   <Badge variant="outline" className="bg-brand-neutral-lightest dark:bg-slate-800">
                     {item.category}
                   </Badge>
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <MapPin className="mr-1 h-3 w-3" />
-                    {item.distance}
-                  </div>
                 </div>
                 <h3 className="text-xl font-bold mb-2">{item.name}</h3>
                 <p className="text-sm text-muted-foreground mb-4">
@@ -243,7 +240,7 @@ const Browse = () => {
           <Button onClick={() => {
             setSearchQuery("");
             setSelectedCategory("All Categories");
-            setDistance([5]);
+            setSelectedCommunity("All Communities"); // Reset community filter
           }}>
             Reset Filters
           </Button>
@@ -269,7 +266,7 @@ const Browse = () => {
 
           <div className="flex flex-col space-y-4">
             {/* Search and Filter */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="relative flex items-center">
                 <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -302,23 +299,11 @@ const Browse = () => {
                   )}
                 </SelectContent>
               </Select>
-              <div className="flex flex-col space-y-2">
-                <label className="text-sm font-medium">
-                  Max Distance: {distance[0]} mile{distance[0] > 1 ? 's' : ''}
-                </label>
-                <Slider
-                  defaultValue={[5]}
-                  max={10}
-                  step={0.5}
-                  value={distance}
-                  onValueChange={setDistance}
-                />
-              </div>
               <div className="flex items-center space-x-2">
                 <Button variant="outline" className="flex-1" onClick={() => {
                   setSearchQuery("");
                   setSelectedCategory("All Categories");
-                  setDistance([5]);
+                  setSelectedCommunity("All Communities"); // Reset community filter
                 }}>
                   Reset
                 </Button>
@@ -349,34 +334,42 @@ const Browse = () => {
                 <p className="text-sm text-muted-foreground">
                   {!loading && `Showing ${filteredItems.length} item${filteredItems.length !== 1 ? 's' : ''}`}
                 </p>
-                <Select defaultValue="relevance">
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="relevance">Sort by: Relevance</SelectItem>
-                    <SelectItem value="distance">Sort by: Distance</SelectItem>
-                    <SelectItem value="newest">Sort by: Newest</SelectItem>
-                    <SelectItem value="rating">Sort by: Rating</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center space-x-2"> {/* Container for filters */}
+                  <Select
+                    value={selectedCommunity}
+                    onValueChange={setSelectedCommunity}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Community" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {communities.map((community) => (
+                        <SelectItem key={community} value={community}>
+                          {community}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Sort by" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="relevance">Sort by: Relevance</SelectItem>
+                      <SelectItem value="newest">Sort by: Newest</SelectItem>
+                      <SelectItem value="rating">Sort by: Rating</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
-              <div className="h-[calc(100vh-400px)] overflow-y-auto px-4 rounded-md">
+              <div className="h-[calc(100vh-350px)] overflow-y-auto px-4 rounded-md">
                 {renderContent()}
               </div>
             </div>
           </div>
         </div>
       </main>
-
-      {/* <footer className="w-full py-6 bg-muted dark:bg-slate-800">
-        <div className="container px-4 md:px-6">
-          <p className="text-sm text-muted-foreground text-center">
-            © {new Date().getFullYear()} Borrow Anything. All rights reserved.
-          </p>
-        </div>
-      </footer> */}
     </div>
   );
 };
