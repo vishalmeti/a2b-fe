@@ -88,6 +88,7 @@ const Auth = () => {
       }
 
       toast({
+        variant: "success",
         title: "Account created",
         description: `Welcome, ${first_name} ${last_name}!`,
       });
