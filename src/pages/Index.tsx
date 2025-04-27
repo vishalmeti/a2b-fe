@@ -16,7 +16,7 @@ import { Benefits } from "@/components/homepage/Benefits";
 
 const featuredItems = [
   {
-    id: 1,
+    id: 'dummy',
     name: "Power Drill",
     description: "Cordless power drill, perfect for small home projects",
     image: "https://images.unsplash.com/photo-1504148455328-c376907d081c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
@@ -29,7 +29,7 @@ const featuredItems = [
     category: "Tools",
   },
   {
-    id: 2,
+    id: 'dummy',
     name: "Stand Mixer",
     description: "Professional stand mixer, great for baking",
     image: "https://images.unsplash.com/photo-1594631252845-29fc4cc8cde9?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
@@ -42,7 +42,7 @@ const featuredItems = [
     category: "Kitchen",
   },
   {
-    id: 3,
+    id: 'dummy',
     name: "Camping Tent",
     description: "4-person tent, waterproof and easy to set up",
     image: "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
@@ -55,7 +55,7 @@ const featuredItems = [
     category: "Outdoors",
   },
   {
-    id: 4,
+    id: 'dummy',
     name: "Air Fryer",
     description: "Large capacity air fryer with digital controls",
     image: "https://images.unsplash.com/photo-1626074353765-517a681e40be?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",

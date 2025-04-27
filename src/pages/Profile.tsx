@@ -229,13 +229,13 @@ const Profile = () => {
       </main>
 
       {/* Footer */}
-      <footer className="w-full py-6 bg-gray-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700/60">
+      {/* <footer className="w-full py-6 bg-gray-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700/60">
         <div className="container px-4 md:px-6">
           <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
             © {new Date().getFullYear()} Borrow Anything. All rights reserved.
           </p>
         </div>
-      </footer>
+      </footer> */}
     </div>
   );
 };

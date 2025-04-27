@@ -10,7 +10,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Item, fetchCategories, updateItemData } from '@/store/slices/itemsSlice';
-import { X, Loader2, Upload, Camera } from 'lucide-react';
+import { usersCommunities } from '@/store/slices/userSlice';
+
+import { Loader2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 
@@ -25,7 +27,6 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, i
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const categories = useSelector((state: RootState) => state.items.categories);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<{
     is_active: any;
     title: string;
@@ -33,7 +34,6 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, i
     category: string;
     price: string;
     availability_status: string;
-    images: string[];
     condition: string;
     location: string;
     deposit_amount: string;
@@ -41,7 +41,16 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, i
     pickup_details: string;
     max_borrow_duration_days: string;
     availability_notes: string;
+    community_id: string;
   } | null>(null);
+
+  const communitiesList = useSelector((state: RootState) => {
+    if (!state.user.data?.communities) return [];
+    return state.user.data.communities.map((community: any) => ({
+      value: community.community,
+      label: community?.community_details?.name || 'Unknown Community'
+    }));
+  });
 
   useEffect(() => {
     console.log('Modal open state changed or item changed:', { isOpen, itemId: item?.id });
@@ -49,17 +58,12 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, i
     if (isOpen && item) {
       console.log('Full item data:', JSON.stringify(item, null, 2));
       
-      const imageUrls = Array.isArray(item.images) 
-        ? item.images.map(img => typeof img === 'string' ? img : img.url || '')
-        : [];
-      
       const newFormData = {
         title: item.title || '',
         description: item.description || '',
         category: item.category?.id ? String(item.category.id) : '',
         price: item.price?.toString() || '',
         availability_status: item.availability_status || 'AVAILABLE',
-        images: imageUrls,
         condition: item.condition || '',
         location: item.location || '',
         deposit_amount: item.deposit_amount?.toString() || '',
@@ -68,6 +72,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, i
         max_borrow_duration_days: item.max_borrow_duration_days?.toString() || '',
         availability_notes: item.availability_notes || '',
         is_active: item.is_active,
+        community_id: item.community || '',
       };
       
       console.log('Setting form data to:', newFormData);
@@ -79,17 +84,12 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, i
     if (formData === null && item && Object.keys(item).length > 0) {
       console.log('Initializing form data from item as fallback');
       
-      const imageUrls = Array.isArray(item.images) 
-        ? item.images.map(img => typeof img === 'string' ? img : img.url || '')
-        : [];
-      
       setFormData({
         title: item.title || '',
         description: item.description || '',
         category: item.category?.id ? String(item.category.id) : '',
         price: item.price?.toString() || '',
         availability_status: item.availability_status || 'AVAILABLE',
-        images: imageUrls,
         condition: item.condition || '',
         location: item.location || '',
         deposit_amount: item.deposit_amount?.toString() || '',
@@ -98,6 +98,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, i
         max_borrow_duration_days: item.max_borrow_duration_days?.toString() || '',
         availability_notes: item.availability_notes || '',
         is_active: item.is_active,
+        community_id: JSON.stringify(item.community) || '',
       });
     }
   }, [formData, item]);
@@ -105,6 +106,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, i
   useEffect(() => {
     if (isOpen) {
       dispatch(fetchCategories());
+      dispatch(usersCommunities());
     }
   }, [isOpen, dispatch]);
 
@@ -114,7 +116,6 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, i
     category: '',
     price: '',
     availability_status: 'AVAILABLE',
-    images: [],
     condition: '',
     location: '',
     deposit_amount: '',
@@ -123,6 +124,7 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, i
     max_borrow_duration_days: '',
     availability_notes: '',
     is_active: false,
+    community_id: '',
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -131,7 +133,6 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, i
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    // Skip updating if the value is our loading placeholder
     if (value === "loading") return;
     
     setFormData(prev => prev ? { ...prev, [name]: value } : null);
@@ -149,12 +150,11 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, i
     setIsSubmitting(true);
     
     try {
-      // Prepare the updated item data matching the Item interface
       const updatedItem: any = {
         id: item.id,
         title: safeFormData.title,
         description: safeFormData.description,
-        category_id: safeFormData.category,
+        category: JSON.parse(safeFormData.category),
         condition: safeFormData.condition,
         availability_notes: safeFormData.availability_notes,
         deposit_amount: safeFormData.deposit_amount,
@@ -162,12 +162,11 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, i
         max_borrow_duration_days: Number(safeFormData.max_borrow_duration_days),
         pickup_details: safeFormData.pickup_details,
         is_active: formData.is_active,
+        community_id: JSON.parse(safeFormData.community_id)
       };
 
-      // Dispatch the update action
-      await dispatch(updateItemData(updatedItem)).unwrap();
+      await dispatch(updateItemData(updatedItem));
       
-      // Show success toast
       toast({
         title: "Success",
         description: "Item updated successfully",
@@ -179,57 +178,13 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, i
     } catch (error) {
       console.error('Failed to update item:', error);
       
-      // Show error toast
       toast({
         title: "Error",
-        description: "Failed to update item. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to update item",
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleImageRemove = (index: number) => {
-    setFormData(prev => prev ? {
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index),
-    } : null);
-  };
-
-  const handleAddImage = (url: string) => {
-    if (url) {
-      setFormData(prev => prev && !prev.images.includes(url) ? {
-        ...prev,
-        images: [...prev.images, url],
-      } : prev);
-    }
-  };
-
-  const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-
-    // Process each file
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      // Only process image files
-      if (!file.type.startsWith('image/')) continue;
-
-      const imageUrl = URL.createObjectURL(file);
-      setFormData(prev => prev ? {
-        ...prev,
-        images: [...prev.images, imageUrl],
-      } : null);
-    }
-
-    // Reset the input so the same file can be selected again if needed
-    e.target.value = '';
-  };
-
-  const openFileSelector = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
     }
   };
 
@@ -251,7 +206,6 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, i
           <Tabs defaultValue="general" className="w-full">
             <TabsList className="mb-4 w-full">
               <TabsTrigger value="general" className="flex-1">General Info</TabsTrigger>
-              <TabsTrigger value="photos" className="flex-1">Photos</TabsTrigger>
               <TabsTrigger value="details" className="flex-1">Additional Details</TabsTrigger>
               <TabsTrigger value="pricing" className="flex-1">Pricing & Terms</TabsTrigger>
             </TabsList>
@@ -326,6 +280,31 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, i
                     </Select>
                   </div>
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="community_id">Community</Label>
+                  <Select 
+                    value={safeFormData.community_id} 
+                    onValueChange={(value) => handleSelectChange('community_id', value)}
+                  >
+                    <SelectTrigger id="community_id">
+                      <SelectValue placeholder="Select community" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {communitiesList.length > 0 ? (
+                        communitiesList.map((community) => (
+                          <SelectItem key={community.value} value={community.value.toString()}>
+                            {community.label}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="loading" disabled>
+                          No communities found. Please join a community first.
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
                 
                 <div className="flex items-center space-x-2 pt-2">
                   <Switch 
@@ -348,53 +327,6 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, i
                     placeholder="Any additional notes on item availability..."
                     rows={2}
                   />
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="photos" className="space-y-4 h-full">
-                <div className="grid grid-cols-2 gap-4">
-                  {safeFormData.images.map((img, index) => (
-                    <div key={index} className="relative group rounded-md overflow-hidden border border-gray-200 dark:border-gray-700">
-                      <img 
-                        src={img} 
-                        alt={`Item ${index}`} 
-                        className="w-full h-32 object-cover"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleImageRemove(index)}
-                        className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Hidden file input */}
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileSelection}
-                  className="hidden"
-                  accept="image/*"
-                  multiple
-                />
-                
-                <div 
-                  className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg mt-4 cursor-pointer"
-                  onClick={openFileSelector}
-                >
-                  <Upload className="h-10 w-10 text-gray-400 mb-2" />
-                  <p className="text-sm text-center text-gray-500 dark:text-gray-400">
-                    Drag and drop your images here, or click to upload
-                  </p>
-                  <Button type="button" variant="ghost" size="sm" className="mt-2" onClick={(e) => {
-                    e.stopPropagation(); // Prevent triggering the parent div's click handler
-                    openFileSelector();
-                  }}>
-                    <Camera className="h-4 w-4 mr-2" /> Upload Photos
-                  </Button>
                 </div>
               </TabsContent>
               

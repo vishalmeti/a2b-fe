@@ -36,6 +36,7 @@ export interface Item {
     icon: string | null;
   };
   condition: string;
+  community: string;
   availability_status: string;
   availability_notes: string;
   deposit_amount: string;

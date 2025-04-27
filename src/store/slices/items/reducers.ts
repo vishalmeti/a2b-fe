@@ -115,16 +115,15 @@ export const buildItemsReducers = (builder: ActionReducerMapBuilder<ItemsState>)
     })
     .addCase(updateItemData.fulfilled, (state, action) => {
       state.loading = false;
-      const listOfImages: ItemImage[] = [];
-      for (let i = 0; i < action.payload.images.length; i++) {
-        const image = action.payload.images[i];
-        listOfImages.push(image.image_url);
-      }
+      // const listOfImages: ItemImage[] = [];
+      // for (let i = 0; i < action.payload?.images?.length; i++) {
+      //   const image = action.payload.images[i];
+      //   listOfImages.push(image.image_url);
+      // }
       const updatedItem = action.payload;
       state.itemsById[updatedItem.id] = {
         ...state.itemsById[updatedItem.id],
         ...updatedItem,
-        images: listOfImages
       };
     })
     .addCase(updateItemData.rejected, (state, action) => {

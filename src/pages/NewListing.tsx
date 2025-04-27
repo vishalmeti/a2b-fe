@@ -577,11 +577,11 @@ const NewListingUltraModern = () => {
                 </div>
             </main>
 
-            <footer className="w-full py-4 border-t bg-background mt-16">
+            {/* <footer className="w-full py-4 border-t bg-background mt-16">
                  <div className="container text-center">
                      <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} Your App Name. All rights reserved.</p>
                  </div>
-            </footer>
+            </footer> */}
         </div>
     );
 };

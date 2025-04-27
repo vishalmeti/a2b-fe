@@ -41,11 +41,9 @@ export const fetchMyItems = createAsyncThunk(
 
 export const updateItemData = createAsyncThunk(
   'items/updateItemData',
-  async (item: Item, { getState }) => {
-    const state = getState() as { user: { data?: { user?: { id?: number } } } };
-    const userId = state.user.data?.user?.id;
+  async (item: Item) => {
     const { id , ...itemData } = item;
-    const response = await apiService.patch(`/items/${id}/?user_id=${userId}`, itemData);
+    const response = await apiService.put(`/items/${id}/`, itemData);
     return response.data;
   }
 );
