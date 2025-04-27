@@ -7,6 +7,7 @@ const HomePage = lazy(() => import("@/pages/Index"));
 const BrowsePage = lazy(() => import("@/pages/Browse"));
 const CommunitiesPage = lazy(() => import("@/pages/Communities"));
 const RequestsPage = lazy(() => import("@/pages/RequestsReceived"));
+const NotificationPage = lazy(() => import("@/pages/Notifications"));
 // const MyItemsPage = lazy(() => import("@/pages/MyItemsPage"));
 const ProfilePage = lazy(() => import("@/pages/Profile"));
 // const SettingsPage = lazy(() => import("@/pages/SettingsPage"));
@@ -68,6 +69,12 @@ const AppRoutes = () => {
             <Route path="/browse" element={
               <ProtectedRoute>
                 <BrowsePage />
+              </ProtectedRoute>
+            } />
+
+            <Route path="settings/notifications" element={
+              <ProtectedRoute>
+                <NotificationPage />
               </ProtectedRoute>
             } />
 
